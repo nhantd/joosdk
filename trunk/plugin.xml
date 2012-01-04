@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            name="Joo Framework SDK"
+            id="joosdk">
+      </category>
+      <wizard
+            name="Joo Layout"
+            icon="icons/sample.gif"
+            category="joosdk"
+            class="org.jooframework.sdk.eclipse.NewLayout"
+            id="org.jooframework.sdk.eclipse.NewLayout">
+      </wizard>
+      <wizard
+            category="joosdk"
+            class="org.jooframework.sdk.eclipse.NewProjectWizard"
+            icon="icons/sample.gif"
+            id="org.jooframework.sdk.eclipse.NewProjectWizard"
+            name="Joo Project"
+            project="true">
+      </wizard>
+   </extension>
+
+</plugin>
