@@ -24,5 +24,26 @@
             project="true">
       </wizard>
    </extension>
-
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.core.resources.IFolder"
+            id="joosdk_ctxmenu.contribution1">
+         <menu
+               label="Joo SDK"
+               path="additions"
+               id="joosdk_ctxmenu.menu1">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               label="Generate default structure"
+               class="org.jooframework.sdk.eclipse.popup.actions.StructureGenerator"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.newAction">
+         </action>
+      </objectContribution>
+   </extension>
 </plugin>
