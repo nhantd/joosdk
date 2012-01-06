@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-
    <extension
          point="org.eclipse.ui.newWizards">
       <category
@@ -27,7 +26,7 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            objectClass="org.eclipse.core.resources.IFolder"
+            objectClass="org.eclipse.core.resources.IContainer"
             id="joosdk_ctxmenu.contribution1">
          <menu
                label="Joo SDK"
@@ -42,7 +41,34 @@
                class="org.jooframework.sdk.eclipse.popup.actions.StructureGenerator"
                menubarPath="joosdk_ctxmenu.menu1/group1"
                enablesFor="1"
-               id="joosdk_ctxmenu.newAction">
+               id="joosdk_ctxmenu.generateAction">
+         </action>
+         <action
+               label="Build Project"
+               class="org.jooframework.sdk.eclipse.popup.actions.ProjectBuilder"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.buildFolderAction">
+         </action>
+      </objectContribution>
+      <objectContribution
+            objectClass="org.eclipse.core.resources.IFile"
+            nameFilter="*.copy.html"
+            id="joosdk_ctxmenu.contribution2">
+         <menu
+               label="Joo SDK"
+               path="additions"
+               id="joosdk_ctxmenu.menu1">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               label="Build Project"
+               class="org.jooframework.sdk.eclipse.popup.actions.ProjectBuilder"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.buildAction">
          </action>
       </objectContribution>
    </extension>
