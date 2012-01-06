@@ -1,16 +1,33 @@
 package org.jooframework.sdk.eclipse;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Shell;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 public class JooSDK {
 	
@@ -191,4 +208,132 @@ public class JooSDK {
         
         contentStream.close();
     }
+
+	public static void build(IFile file) {
+		String name = file.getName();
+		if (name.startsWith("index.")) {
+			buildFile(file);
+		}
+	}
+
+	public static void build(IContainer f) {
+		try {
+			IResource []members = f.members();
+			for(IResource member: members) {
+				if (member instanceof IFile) {
+					IFile file = (IFile) member;
+					String fname = file.getName();
+					if (fname.startsWith("index.") && fname.endsWith(".copy.html")) {
+						buildFile(file);
+					}
+				}
+			}
+		} catch (CoreException e) {
+			
+		}
+	}
+	
+	private static void buildFile(IFile file) {
+		String name = file.getName();
+		String version = name.substring(6, name.length()-10);
+		
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = dbf.newDocumentBuilder();
+			InputSource is = new InputSource(new StringReader(getFileContent(file)));
+			Document doc = builder.parse(is);
+
+			//build all.js
+			StringBuilder sb = new StringBuilder();
+			NodeList nl = doc.getElementsByTagName("script");
+			ArrayList<String> srcArray = new ArrayList<String>();
+			for(int i=0;i<nl.getLength();i++) {
+				Node n = nl.item(i);
+				String src = extractAttribute(n, "src");
+				String build = extractAttribute(n, "build");
+				if(src != null && src.length() > 0 && (build == null || !build.equals("no"))) {
+					sb.append(getFileContent(file.getParent(), src));
+					srcArray.add(src);
+				}
+			}
+			writeFile(file.getParent(), "resource/js/all."+version+".js", sb.toString());
+
+			//build all.css
+			sb = new StringBuilder();
+			nl = doc.getElementsByTagName("link");
+			for(int i=0;i<nl.getLength();i++) {
+				String src = extractAttribute(nl.item(i), "href");
+				if(src != null && src.length() > 0) {
+					sb.append(getFileContent(file.getParent(), src));
+				}
+			}
+			writeFile(file.getParent(), "resource/css/all."+version+".css", sb.toString());
+			
+			//build all.txt
+			sb = new StringBuilder();
+			ArrayList<String> htmlArray = new ArrayList<String>();
+			htmlArray.add("resource/microtemplating/"+version+"/template.htm");
+			htmlArray.add("resource/microtemplating/"+version+"/layout.htm");
+			htmlArray.add("resource/microtemplating/"+version+"/plugin.htm");
+			nl = doc.getElementsByTagName("link");
+			for(String src: srcArray) {
+				if (src.indexOf("resource/js/app/portlets/") != -1) {
+					src = src.replaceFirst("resource/js/app/portlets/", "resource/microtemplating/"+version+"/");
+					src = src.replaceFirst(".js", ".htm");
+					htmlArray.add(src);
+				}
+			}
+			for(String src: htmlArray) {
+				sb.append(getFileContent(file.getParent(), src));
+			}
+			writeFile(file.getParent(), "resource/microtemplating/all."+version+".txt", sb.toString());
+		} catch (Exception ex) {
+		}
+	}
+
+	private static void writeFile(IContainer parent, String file, String content) throws UnsupportedEncodingException, CoreException {
+		IFile f = parent.getFile(new Path(file));
+		if (f.exists()) {
+            f.setContents(new ByteArrayInputStream(content.getBytes("utf-8")), true, true, null);
+        } else {
+            f.create(new ByteArrayInputStream(content.getBytes("utf-8")), true, null);
+        }
+	}
+	
+	private static String getFileContent(IFile file) {
+		if (file != null && file.exists() && file.isAccessible()) {
+			StringBuilder sb = new StringBuilder();
+			BufferedReader br = null;
+			try {
+				br = new BufferedReader(new InputStreamReader(file.getContents()));
+				String s = null;
+				while ((s = br.readLine()) != null) {
+					sb.append(s);
+					sb.append("\n");
+				}
+				return sb.toString();
+			} catch (Exception ex) {
+			} finally {
+				if (br != null) {
+					try {
+						br.close();
+					} catch (Exception ex) {}
+				}
+			}
+		}
+		return "";
+	}
+
+	private static String getFileContent(IContainer parent, String src) {
+		IFile file = parent.getFile(new Path(src));
+		return getFileContent(file);
+	}
+
+	private static String extractAttribute(Node node, String attr) {
+		if (node instanceof Element) {
+			Element e = (Element) node;
+			return e.getAttribute(attr);
+		}
+		return null;
+	}
 }
