@@ -59,7 +59,6 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 				.newProjectDescription(projectHandle.getName());
 
 		desc.setLocationURI(projectURI);
-
 		/*
 		 * Just like the ExampleWizard, but this time with an operation object
 		 * that modifies workspaces.
@@ -92,10 +91,14 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 			return false;
 		}
 
-		BasicNewProjectResourceWizard.updatePerspective(config);
-		BasicNewProjectResourceWizard.selectAndReveal(project, workbench
-				.getActiveWorkbenchWindow());
-
+		try {
+//			BasicNewProjectResourceWizard.updatePerspective(config);
+			BasicNewProjectResourceWizard.selectAndReveal(project, workbench
+					.getActiveWorkbenchWindow());
+		} catch (Exception ex) {
+			MessageDialog.openError(getShell(), "Error", ex
+					.toString());
+		}
 		return true;
 	}
 
@@ -105,7 +108,7 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-
+		this.workbench = workbench;
 	}
 
 	public void addPages() {

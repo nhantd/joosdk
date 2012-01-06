@@ -1,29 +1,35 @@
 package org.jooframework.sdk.eclipse.popup.actions;
 
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IActionDelegate;
+import org.eclipse.ui.IActionFilter;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.jooframework.sdk.eclipse.JooSDK;
+import org.jooframework.sdk.eclipse.popup.filters.RootFolderFilter;
 
-public class StructureGenerator implements IObjectActionDelegate {
+public class ProjectBuilder implements IObjectActionDelegate, IAdaptable {
 
 	private Shell shell;
 	private IWorkbenchPart part;
-	private IFolder folder;
+	private IResource res;
 	
 	/**
 	 * Constructor for Action1.
 	 */
-	public StructureGenerator() {
+	public ProjectBuilder() {
 		super();
 	}
 
@@ -40,18 +46,19 @@ public class StructureGenerator implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 		IStructuredSelection selection = (IStructuredSelection) part.getSite().getSelectionProvider().getSelection();
-		folder = (IFolder)selection.getFirstElement();
+		res = (IResource)selection.getFirstElement();
 		
-		Job job = new Job("Generate Joo default structure") {
+		Job job = new Job("Build Joo Project") {
 			@Override
-			protected IStatus run(IProgressMonitor arg0) {
+			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					JooSDK.createDefaultStructure(folder, null);
+					if (res instanceof IContainer) {
+						JooSDK.build((IContainer)res);
+					} else {
+						JooSDK.build((IFile)res);
+					}
 				} catch (Exception ex) {
-					//MessageDialog.openError(
-						//	shell,
-							//"Joo SDK Error",
-							//"Error while generating file structure: "+ex.toString());
+					
 				}
 				return Status.OK_STATUS;
 			}
@@ -63,6 +70,13 @@ public class StructureGenerator implements IObjectActionDelegate {
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
 	public void selectionChanged(IAction action, ISelection selection) {
+	}
+
+	public Object getAdapter(Class c) {
+		if (c == IActionFilter.class) {
+			return new RootFolderFilter();
+		}
+		return null;
 	}
 
 }
