@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JooSDK Plug-in
-Bundle-SymbolicName: joosdk; singleton:=true
+Bundle-SymbolicName: org.jooframework.sdk;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: org.jooframework.sdk.eclipse.Activator
 Require-Bundle: org.eclipse.ui,

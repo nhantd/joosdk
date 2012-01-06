@@ -5,7 +5,7 @@
          point="org.eclipse.ui.newWizards">
       <category
             name="Joo Framework SDK"
-            id="joosdk">
+            id="org.jooframework.sdk">
       </category>
       <wizard
             name="Joo Layout"

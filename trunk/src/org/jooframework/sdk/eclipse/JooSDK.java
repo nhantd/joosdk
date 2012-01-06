@@ -21,8 +21,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Shell;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -148,11 +146,6 @@ public class JooSDK {
 		/* Add the production main page file */
 		addFileToProject(container, new Path("index.html"),
 				getResource("/templates/index.html"), monitor);
-		
-		addFileToProject(container, new Path("build.php"),
-				getResource("/templates/tools/build.php"), monitor);
-		addFileToProject(container, new Path("simple_html_dom.php"),
-				getResource("/templates/tools/simple_html_dom.php"), monitor);
 		
 		/* Sample files */
 		final IFolder defaultSampleFolder = container.getFolder(new Path("resource/js/app/portlets/samples"));
