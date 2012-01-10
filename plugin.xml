@@ -5,15 +5,8 @@
          point="org.eclipse.ui.newWizards">
       <category
             name="Joo Framework SDK"
-            id="org.jooframework.sdk">
+            id="joosdk">
       </category>
-      <wizard
-            name="Joo Layout"
-            icon="icons/sample.gif"
-            category="joosdk"
-            class="org.jooframework.sdk.eclipse.NewLayout"
-            id="org.jooframework.sdk.eclipse.NewLayout">
-      </wizard>
       <wizard
             category="joosdk"
             class="org.jooframework.sdk.eclipse.NewProjectWizard"
