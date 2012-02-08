@@ -31,112 +31,112 @@ public class JooSDK {
 	
 	public static void createDefaultStructure(IContainer container, IProgressMonitor monitor) throws CoreException, IOException {
 		/* Add the resource folder */
-		final IFolder resourceFolder = container.getFolder(new Path("resource"));
+		final IFolder resourceFolder = container.getFolder(new Path("static"));
 		resourceFolder.create(true, true, monitor);
 		
 		/* Add the stylesheet folder */
-		final IFolder styleFolder = container.getFolder(new Path("resource/css"));
+		final IFolder styleFolder = container.getFolder(new Path("static/css"));
 		styleFolder.create(true, true, monitor);
-		final IFolder defaultStyleFolder = container.getFolder(new Path("resource/css/default"));
+		final IFolder defaultStyleFolder = container.getFolder(new Path("static/css/default"));
 		defaultStyleFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("resource/css/default/portlet.css"),
+		addFileToProject(container, new Path("static/css/default/portlet.css"),
 				getResource("/templates/portlet.css"), monitor);
 		
 		/* Add the images folder */
-		final IFolder imagesFolder = container.getFolder(new Path("resource/images"));
+		final IFolder imagesFolder = container.getFolder(new Path("static/images"));
 		imagesFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("resource/images/logo.jpg"),
+		addFileToProject(container, new Path("static/images/logo.jpg"),
 				getResource("/templates/logo.jpg"), monitor);
 		
 		/* Add the favicon */
-//		addFileToProject(container, new Path("resource/images/favicon.ico"),
+//		addFileToProject(container, new Path("static/images/favicon.ico"),
 //				getResource("/templates/favicon.ico"), monitor);
 		
 		/* Add the js folder */
-		final IFolder jsFolder = container.getFolder(new Path("resource/js"));
+		final IFolder jsFolder = container.getFolder(new Path("static/js"));
 		jsFolder.create(true, true, monitor);
 		
 		/* Add the js app folder */
-		final IFolder jsAppFolder = container.getFolder(new Path("resource/js/app"));
+		final IFolder jsAppFolder = container.getFolder(new Path("static/js/app"));
 		jsAppFolder.create(true, true, monitor);
 		
-		final IFolder jsAppPortletFolder = container.getFolder(new Path("resource/js/app/portlets"));
+		final IFolder jsAppPortletFolder = container.getFolder(new Path("static/js/app/portlets"));
 		jsAppPortletFolder.create(true, true, monitor);
 		
-		final IFolder jsAppPluginFolder = container.getFolder(new Path("resource/js/app/plugins"));
+		final IFolder jsAppPluginFolder = container.getFolder(new Path("static/js/app/plugins"));
 		jsAppPluginFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("resource/js/app/index.default.js"),
+		addFileToProject(container, new Path("static/js/app/index.default.js"),
 				getResource("/templates/index.default.js"), monitor);
 		
 		/* Add the js framework folder */
-		final IFolder jsFwFolder = container.getFolder(new Path("resource/js/framework"));
+		final IFolder jsFwFolder = container.getFolder(new Path("static/js/framework"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("resource/js/framework/base.js"),
+		addFileToProject(container, new Path("static/js/framework/base.js"),
 				getResource("/templates/base.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/bootstrap.js"),
+		addFileToProject(container, new Path("static/js/framework/bootstrap.js"),
 				getResource("/templates/bootstrap.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/event.js"),
+		addFileToProject(container, new Path("static/js/framework/event.js"),
 				getResource("/templates/event.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/memcached.js"),
+		addFileToProject(container, new Path("static/js/framework/memcached.js"),
 				getResource("/templates/memcached.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/observer.js"),
+		addFileToProject(container, new Path("static/js/framework/observer.js"),
 				getResource("/templates/observer.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/page.js"),
+		addFileToProject(container, new Path("static/js/framework/page.js"),
 				getResource("/templates/page.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/plugins.js"),
+		addFileToProject(container, new Path("static/js/framework/plugins.js"),
 				getResource("/templates/plugins.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/portlet.js"),
+		addFileToProject(container, new Path("static/js/framework/portlet.js"),
 				getResource("/templates/portlet.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/request.js"),
+		addFileToProject(container, new Path("static/js/framework/request.js"),
 				getResource("/templates/request.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/tools.js"),
+		addFileToProject(container, new Path("static/js/framework/tools.js"),
 				getResource("/templates/tools.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/ui.js"),
+		addFileToProject(container, new Path("static/js/framework/ui.js"),
 				getResource("/templates/ui.js"), monitor);
-		addFileToProject(container, new Path("resource/js/framework/utils.js"),
+		addFileToProject(container, new Path("static/js/framework/utils.js"),
 				getResource("/templates/utils.js"), monitor);
 		
 		/* Add the js lib folder */
-		final IFolder jsLibFolder = container.getFolder(new Path("resource/js/lib"));
+		final IFolder jsLibFolder = container.getFolder(new Path("static/js/lib"));
 		jsLibFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("resource/js/lib/inherit.js"),
+		addFileToProject(container, new Path("static/js/lib/inherit.js"),
 				getResource("/templates/inherit.js"), monitor);
-		addFileToProject(container, new Path("resource/js/lib/jquery-1.7.1.min.js"),
+		addFileToProject(container, new Path("static/js/lib/jquery-1.7.1.min.js"),
 				getResource("/templates/jquery-1.7.1.min.js"), monitor);
-		addFileToProject(container, new Path("resource/js/lib/jquery-ui.min.js"),
+		addFileToProject(container, new Path("static/js/lib/jquery-ui.min.js"),
 				getResource("/templates/jquery-ui.min.js"), monitor);
-		addFileToProject(container, new Path("resource/js/lib/jquery.cookie.js"),
+		addFileToProject(container, new Path("static/js/lib/jquery.cookie.js"),
 				getResource("/templates/jquery.cookie.js"), monitor);
-		addFileToProject(container, new Path("resource/js/lib/jquery.json-2.2.js"),
+		addFileToProject(container, new Path("static/js/lib/jquery.json-2.2.js"),
 				getResource("/templates/jquery.json-2.2.js"), monitor);
-		addFileToProject(container, new Path("resource/js/lib/micro-templating.js"),
+		addFileToProject(container, new Path("static/js/lib/micro-templating.js"),
 				getResource("/templates/micro-templating.js"), monitor);
 		
 		/* Add the js 3rd party folder */
-		final IFolder jsThirdPartyFolder = container.getFolder(new Path("resource/js/thirdparty"));
+		final IFolder jsThirdPartyFolder = container.getFolder(new Path("static/js/thirdparty"));
 		jsThirdPartyFolder.create(true, true, monitor);
 		
 		/* Add the microtemplating folder */
-		final IFolder templateFolder = container.getFolder(new Path("resource/microtemplating"));
+		final IFolder templateFolder = container.getFolder(new Path("static/microtemplating"));
 		templateFolder.create(true, true, monitor);
-		final IFolder defaultTemplateFolder = container.getFolder(new Path("resource/microtemplating/default"));
+		final IFolder defaultTemplateFolder = container.getFolder(new Path("static/microtemplating/default"));
 		defaultTemplateFolder.create(true, true, monitor);
 
 		/* Add the layout file */
-		addFileToProject(container, new Path("resource/microtemplating/default/layout.htm"),
+		addFileToProject(container, new Path("static/microtemplating/default/layout.htm"),
 				getResource("/templates/layout.htm"), monitor);
 		
 		/* Add the template file */
-		addFileToProject(container, new Path("resource/microtemplating/default/template.htm"),
+		addFileToProject(container, new Path("static/microtemplating/default/template.htm"),
 				getResource("/templates/template.htm"), monitor);
 		
 		/* Add the plugin file */
-		addFileToProject(container, new Path("resource/microtemplating/default/plugin.htm"),
+		addFileToProject(container, new Path("static/microtemplating/default/plugin.htm"),
 				getResource("/templates/plugin.htm"), monitor);
 		
 		/* Add the development main page file */
@@ -148,23 +148,23 @@ public class JooSDK {
 				getResource("/templates/index.html"), monitor);
 		
 		/* Sample files */
-		final IFolder defaultSampleFolder = container.getFolder(new Path("resource/js/app/portlets/samples"));
+		final IFolder defaultSampleFolder = container.getFolder(new Path("static/js/app/portlets/samples"));
 		defaultSampleFolder.create(true, true, monitor);
-		final IFolder defaultSampleTemplateFolder = container.getFolder(new Path("resource/microtemplating/default/samples"));
+		final IFolder defaultSampleTemplateFolder = container.getFolder(new Path("static/microtemplating/default/samples"));
 		defaultSampleTemplateFolder.create(true, true, monitor);
-		addFileToProject(container, new Path("resource/css/default/sample.css"),
+		addFileToProject(container, new Path("static/css/default/sample.css"),
 				getResource("/templates/samples/sample.css"), monitor);
-		addFileToProject(container, new Path("resource/js/app/portlets/samples/SamplePortlet.js"),
+		addFileToProject(container, new Path("static/js/app/portlets/samples/SamplePortlet.js"),
 				getResource("/templates/samples/SamplePortlet.js"), monitor);
-		addFileToProject(container, new Path("resource/microtemplating/default/samples/SamplePortlet.htm"),
+		addFileToProject(container, new Path("static/microtemplating/default/samples/SamplePortlet.htm"),
 				getResource("/templates/samples/SamplePortlet.htm"), monitor);
 
 		/* Pre-built files */
-		addFileToProject(container, new Path("resource/css/all.default.css"),
+		addFileToProject(container, new Path("static/css/all.default.css"),
 				getResource("/templates/build/all.default.css"), monitor);
-		addFileToProject(container, new Path("resource/js/all.default.js"),
+		addFileToProject(container, new Path("static/js/all.default.js"),
 				getResource("/templates/build/all.default.js"), monitor);
-		addFileToProject(container, new Path("resource/microtemplating/all.default.txt"),
+		addFileToProject(container, new Path("static/microtemplating/all.default.txt"),
 				getResource("/templates/build/all.default.txt"), monitor);
 	}
 	
@@ -187,7 +187,7 @@ public class JooSDK {
             throws CoreException, IOException {
         if (contentStream == null) {
         	IStatus status = new Status(IStatus.ERROR, "JooProjectWizard",
-					IStatus.OK, "Resource unavailable: "+path.toFile().getPath(), null);
+					IStatus.OK, "static unavailable: "+path.toFile().getPath(), null);
 			throw new CoreException(status);
         }
     	
@@ -249,7 +249,7 @@ public class JooSDK {
 					srcArray.add(src);
 				}
 			}
-			writeFile(file.getParent(), "resource/js/all."+version+".js", sb.toString());
+			writeFile(file.getParent(), "static/js/all."+version+".js", sb.toString());
 
 			//build all.css
 			sb = new StringBuilder();
@@ -260,18 +260,18 @@ public class JooSDK {
 					sb.append(getFileContent(file.getParent(), src));
 				}
 			}
-			writeFile(file.getParent(), "resource/css/all."+version+".css", sb.toString());
+			writeFile(file.getParent(), "static/css/all."+version+".css", sb.toString());
 			
 			//build all.txt
 			sb = new StringBuilder();
 			ArrayList<String> htmlArray = new ArrayList<String>();
-			htmlArray.add("resource/microtemplating/"+version+"/template.htm");
-			htmlArray.add("resource/microtemplating/"+version+"/layout.htm");
-			htmlArray.add("resource/microtemplating/"+version+"/plugin.htm");
+			htmlArray.add("static/microtemplating/"+version+"/template.htm");
+			htmlArray.add("static/microtemplating/"+version+"/layout.htm");
+			htmlArray.add("static/microtemplating/"+version+"/plugin.htm");
 			nl = doc.getElementsByTagName("link");
 			for(String src: srcArray) {
-				if (src.indexOf("resource/js/app/portlets/") != -1) {
-					src = src.replaceFirst("resource/js/app/portlets/", "resource/microtemplating/"+version+"/");
+				if (src.indexOf("static/js/app/portlets/") != -1) {
+					src = src.replaceFirst("static/js/app/portlets/", "static/microtemplating/"+version+"/");
 					src = src.replaceFirst(".js", ".htm");
 					htmlArray.add(src);
 				}
@@ -279,7 +279,7 @@ public class JooSDK {
 			for(String src: htmlArray) {
 				sb.append(getFileContent(file.getParent(), src));
 			}
-			writeFile(file.getParent(), "resource/microtemplating/all."+version+".txt", sb.toString());
+			writeFile(file.getParent(), "static/microtemplating/all."+version+".txt", sb.toString());
 		} catch (Exception ex) {
 		}
 	}
@@ -298,7 +298,7 @@ public class JooSDK {
 			StringBuilder sb = new StringBuilder();
 			BufferedReader br = null;
 			try {
-				br = new BufferedReader(new InputStreamReader(file.getContents()));
+				br = new BufferedReader(new InputStreamReader(file.getContents(), "utf-8"));
 				String s = null;
 				while ((s = br.readLine()) != null) {
 					sb.append(s);
