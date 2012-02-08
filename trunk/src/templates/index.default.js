@@ -14,7 +14,7 @@ $(window).bind("hashchange", function(){
 });
 
 $(document).ready(function()	{
-	$.get(ApplicationRoot+'/resource/microtemplating/all.default.txt', {}, function(ret)	{
+	$.get(ApplicationRoot+'/static/microtemplating/all.default.txt', {}, function(ret)	{
 		var useragent = navigator.userAgent;
 		if (useragent.indexOf('MSIE') != -1)	{
 			$('#Application-Main').html(ret);
