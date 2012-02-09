@@ -1,5 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
+		<link href="static/css/default/ui.css" rel="stylesheet" type="text/css" />
 		<link href="static/css/default/portlet.css" rel="stylesheet" type="text/css" />
 		<link href="static/css/default/sample.css" rel="stylesheet" type="text/css" />
 	</head>
@@ -18,7 +19,7 @@
         <!-- framework -->
         <script type="text/javascript" src="static/js/framework/base.js"></script>
 		<script type="text/javascript" src="static/js/framework/ui.js"></script>
-        <script type="text/javascript" src="static/js/framework/tools.js"></script>
+        <script type="text/javascript" src="static/js/framework/widget.js"></script>
         <script type="text/javascript" src="static/js/framework/event.js"></script>
         <script type="text/javascript" src="static/js/framework/observer.js"></script>
         <script type="text/javascript" src="static/js/framework/plugins.js"></script>
@@ -39,9 +40,28 @@
 		<!-- addons -->
 
 		<!-- entry-point -->
-		<script type="text/javascript" src="static/js/app/index.default.js"></script>
 
-		<!-- indicate the application main area, as specified in index.default.js -->
         <div id="Application-Main"></div>
+		<!-- indicate the application main area, as specified in index.default.js -->
+		
+		<script type="text/javascript">
+			var stage = new Stage({id: 'Application-Main'});
+			var btn = new JOOButton({txt: 'Click Me!'});
+			//btn.addEventListener('click', function(event) {
+			//	alert(this.className);
+			//});
+			//stage.addChild(btn);
+			//btn.setStyle('width', 'auto');
+			//btn.setStyle('height', 'auto');
+			//btn.setScale(2);
+			//btn.setRotation(30);
+			//btn.setLocation(100, 200);
+			
+			var resizable1 = new JOOResizableCanvas({txt: 'Resize me 1st!'});
+			stage.addChild(resizable1);
+			
+			var resizable2 = new JOOResizableCanvas({txt: 'Resize me 2nd!'});
+			stage.addChild(resizable2);
+		</script>
 </body>
 </html>
