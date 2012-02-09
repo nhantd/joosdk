@@ -42,6 +42,8 @@ public class JooSDK {
 		
 		addFileToProject(container, new Path("static/css/default/portlet.css"),
 				getResource("/templates/portlet.css"), monitor);
+		addFileToProject(container, new Path("static/css/default/ui.css"),
+				getResource("/templates/ui.css"), monitor);
 		
 		/* Add the images folder */
 		final IFolder imagesFolder = container.getFolder(new Path("static/images"));
@@ -93,7 +95,7 @@ public class JooSDK {
 				getResource("/templates/portlet.js"), monitor);
 		addFileToProject(container, new Path("static/js/framework/request.js"),
 				getResource("/templates/request.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/tools.js"),
+		addFileToProject(container, new Path("static/js/framework/widget.js"),
 				getResource("/templates/tools.js"), monitor);
 		addFileToProject(container, new Path("static/js/framework/ui.js"),
 				getResource("/templates/ui.js"), monitor);
