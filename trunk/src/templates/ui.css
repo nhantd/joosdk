@@ -1,0 +1,36 @@
+.joo-uicomponent {
+	position: absolute;
+}
+
+.joo-editable-text {
+	display: table-cell;
+	text-align: center;
+	vertical-align: middle;
+	margin-left: 8px;
+}
+
+.joo-editable-component {
+	text-align: center;
+	cursor: move;
+	z-index: 5;
+}
+
+.joo-move-icon {
+	border-width: 1px;
+	border-style: solid;
+	-moz-border-radius:3px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	background-color: #ccc;
+	opacity: 0.5;
+}
+
+.joo-close-btn {
+	width: 10px;
+	cursor: pointer;
+	z-index: 10;
+}
+
+.joo-layout-flow {
+	display: inline-block;
+}
