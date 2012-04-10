@@ -44,6 +44,8 @@ public class JooSDK {
 				getResource("/templates/portlet.css"), monitor);
 		addFileToProject(container, new Path("static/css/default/ui.css"),
 				getResource("/templates/ui.css"), monitor);
+		addFileToProject(container, new Path("static/css/default/tooltips.css"),
+				getResource("/templates/tooltips.css"), monitor);
 		
 		/* Add the images folder */
 		final IFolder imagesFolder = container.getFolder(new Path("static/images"));
@@ -51,6 +53,8 @@ public class JooSDK {
 		
 		addFileToProject(container, new Path("static/images/logo.jpg"),
 				getResource("/templates/logo.jpg"), monitor);
+		addFileToProject(container, new Path("static/images/image-default.png"),
+				getResource("/templates/image-default.png"), monitor);
 		
 		/* Add the favicon */
 //		addFileToProject(container, new Path("static/images/favicon.ico"),
@@ -70,6 +74,9 @@ public class JooSDK {
 		final IFolder jsAppPluginFolder = container.getFolder(new Path("static/js/app/plugins"));
 		jsAppPluginFolder.create(true, true, monitor);
 		
+		final IFolder jsAppViewFolder = container.getFolder(new Path("static/js/app/views"));
+		jsAppViewFolder.create(true, true, monitor);
+		
 		addFileToProject(container, new Path("static/js/app/index.default.js"),
 				getResource("/templates/index.default.js"), monitor);
 		
@@ -77,47 +84,10 @@ public class JooSDK {
 		final IFolder jsFwFolder = container.getFolder(new Path("static/js/framework"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/js/framework/base.js"),
-				getResource("/templates/base.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/bootstrap.js"),
-				getResource("/templates/bootstrap.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/event.js"),
-				getResource("/templates/event.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/memcached.js"),
-				getResource("/templates/memcached.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/observer.js"),
-				getResource("/templates/observer.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/page.js"),
-				getResource("/templates/page.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/plugins.js"),
-				getResource("/templates/plugins.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/portlet.js"),
-				getResource("/templates/portlet.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/request.js"),
-				getResource("/templates/request.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/widget.js"),
-				getResource("/templates/tools.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/ui.js"),
-				getResource("/templates/ui.js"), monitor);
-		addFileToProject(container, new Path("static/js/framework/utils.js"),
-				getResource("/templates/utils.js"), monitor);
-		
-		/* Add the js lib folder */
-		final IFolder jsLibFolder = container.getFolder(new Path("static/js/lib"));
-		jsLibFolder.create(true, true, monitor);
-		
-		addFileToProject(container, new Path("static/js/lib/inherit.js"),
-				getResource("/templates/inherit.js"), monitor);
-		addFileToProject(container, new Path("static/js/lib/jquery-1.7.1.min.js"),
-				getResource("/templates/jquery-1.7.1.min.js"), monitor);
-		addFileToProject(container, new Path("static/js/lib/jquery-ui.min.js"),
-				getResource("/templates/jquery-ui.min.js"), monitor);
-		addFileToProject(container, new Path("static/js/lib/jquery.cookie.js"),
-				getResource("/templates/jquery.cookie.js"), monitor);
-		addFileToProject(container, new Path("static/js/lib/jquery.json-2.2.js"),
-				getResource("/templates/jquery.json-2.2.js"), monitor);
-		addFileToProject(container, new Path("static/js/lib/micro-templating.js"),
-				getResource("/templates/micro-templating.js"), monitor);
+		addFileToProject(container, new Path("static/js/framework/joo-2.0.0.js"),
+				getResource("/templates/joo-2.0.0.js"), monitor);
+		addFileToProject(container, new Path("static/js/framework/class-name-injection.js"),
+				getResource("/templates/class-name-injection.js"), monitor);
 		
 		/* Add the js 3rd party folder */
 		final IFolder jsThirdPartyFolder = container.getFolder(new Path("static/js/thirdparty"));
