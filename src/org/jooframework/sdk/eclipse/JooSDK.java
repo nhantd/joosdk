@@ -77,15 +77,15 @@ public class JooSDK {
 		final IFolder jsAppViewFolder = container.getFolder(new Path("static/js/app/views"));
 		jsAppViewFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/js/app/index.default.js"),
-				getResource("/templates/index.default.js"), monitor);
+		addFileToProject(container, new Path("static/js/app/main.js"),
+				getResource("/templates/main.js"), monitor);
 		
 		/* Add the js framework folder */
 		final IFolder jsFwFolder = container.getFolder(new Path("static/js/framework"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/js/framework/joo-2.0.0.js"),
-				getResource("/templates/joo-2.0.0.js"), monitor);
+		addFileToProject(container, new Path("static/js/framework/joo-2.0.2.js"),
+				getResource("/templates/joo-2.0.2.js"), monitor);
 		addFileToProject(container, new Path("static/js/framework/class-name-injection.js"),
 				getResource("/templates/class-name-injection.js"), monitor);
 		
