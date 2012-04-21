@@ -12419,18 +12419,21 @@ function is_array(input){
     return typeof(input)=='object'&&(input instanceof Array);
 }
 
-/* Simple JavaScript Inheritance
- * By John Resig http://ejohn.org/
- * MIT Licensed.
- */
-// Inspired by base2 and Prototype
 (function(){
   var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
 
-  // The base Class implementation (does nothing)
+  /**
+   * This class is abstracted and should not be used by developers
+   * @class Base class for all JOO objects.
+   */
   this.Class = function(){};
  
-  // Create a new Class that inherits from this class
+  /**
+   * Extends the current class with new methods & fields
+   * @param {Object} prop additional methods & fields to be included in new class
+   * @static
+   * @returns {Class} new class
+   */
   Class.extend = function(prop) {
 	if (typeof updateTracker != 'undefined')
 		updateTracker(1);
@@ -12472,7 +12475,13 @@ function is_array(input){
         })(name, prop[name]) :
         prop[name];
     }
-    
+  
+    /**
+     * Implements the current class with a set of interfaces
+     * @param {InterfaceImplementor...} interfaces a set of interfaces to be implemented
+     * @static
+     * @returns {Class} current class
+     */
     Class.implement = function() {
     	for(var i=0;i<arguments.length;i++) {
 			var impl = new arguments[i]();
@@ -12481,7 +12490,6 @@ function is_array(input){
     	return Class;
     };
    
-    // The dummy class constructor
     function Class() {
       // All construction is actually done in the init method
       if ( !initializing && this.init ) {
@@ -14476,26 +14484,24 @@ function hidetip() {
 }
 
 document.onmousemove = positiontip;
-/**
- * A class to store system-wide properties
- * @augments Class
- * @author griever
- */
-SystemProperty = Class.extend({
+SystemProperty = Class.extend(
+/** @lends SystemProperty# */
+{
 	
 	/**
-	 * Initialize properties
-	 * @constructors
+	 * Initialize properties.
+	 * @class A class to store system-wide properties
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function()	{
 		this.properties = Array();
 	},
 	
 	/**
-	 * Retrieve the value of a property
-	 * @function
-	 * @param {property} the name of the property to retrieve
-	 * @param {defaultValue} the default value, used if the property is not found
+	 * Retrieve the value of a property.
+	 * @param {String} property the name of the property to retrieve
+	 * @param {Object} defaultValue the default value, used if the property is not found
 	 * @returns {mixed} the property value, or the default value or undefined 
 	 */
 	get: function(property, defaultValue)	{
@@ -14512,11 +14518,10 @@ SystemProperty = Class.extend({
 	},
 	
 	/**
-	 * Store the value of a property
-	 * @function
-	 * @param {property} the name of the property to store
-	 * @param {value} the new value
-	 * @param {persistent} should the property be stored in cookie for future use
+	 * Store the value of a property.
+	 * @param {String} property the name of the property to store
+	 * @param {Object} value the new value
+	 * @param {Boolean} persistent should the property be stored in cookie for future use
 	 */
 	set: function(property, value, persistent)	{
 		if(!persistent){
@@ -14524,17 +14529,8 @@ SystemProperty = Class.extend({
 		}else{
 			$.cookie(property,value,{ expires: 1 });
 		}
-//		console.log('system property changed: '+property);
 		var subject = SingletonFactory.getInstance(Subject);
 		subject.notifyEvent("SystemPropertyChanged", property);
-	},
-	
-	dump: function()	{
-		//console.log('Dumping system properties...');
-//		for(var p in this.properties)	{
-			//console.log(p+": "+this.properties[p]);
-//		}
-		//console.log('Dumping complete!');
 	},
 	
 	toString: function() {
@@ -14542,16 +14538,14 @@ SystemProperty = Class.extend({
 	}
 });
 
-/**
- * Resource Manager. Manage resource using the underlying resource locator
- * @augments Class
- * @author griever
- */
-ResourceManager = Class.extend({
-	
+ResourceManager = Class.extend(
+/** @lends ResourceManager# */		
+{
 	/**
-	 * Initialize resource locators
-	 * @constructors
+	 * Initialize resource locators.
+	 * @class Manage resource using the underlying resource locator
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function()	{
 		this.resourceLocator = new JQueryResourceLocator();
@@ -14559,15 +14553,15 @@ ResourceManager = Class.extend({
 	},
 	
 	/**
-	 * Change the current resource locator
-	 * @param {locator} the resource locator to be used
+	 * Change the current resource locator.
+	 * @param {ResourceLocator} locator the resource locator to be used
 	 */
 	setResourceLocator: function(locator)	{
 		this.resourceLocator = locator;
 	},
 	
 	/**
-	 * Get the current resource locator
+	 * Get the current resource locator.
 	 * @returns {ResourceLocator} the current resource locator
 	 */
 	getResourceLocator: function(locator)	{
@@ -14576,9 +14570,11 @@ ResourceManager = Class.extend({
 	
 	/**
 	 * Ask the underlying resource locator for a specific resource
-	 * @param {type} used as a namespace to distinct different resources with the same name
-	 * @param {name} the name of the resource
-	 * @param {resourceLocator} Optional. The resource locator to be used in the current request
+	 * @param {String} type used as a namespace to distinct different resources with the same name
+	 * @param {String} name the name of the resource
+	 * @param {ResourceLocator} resourceLocator Optional. The resource locator to be used in the current request
+	 * @param {Boolean} cache Optional. Should the resource be cached for further use
+	 * @returns {Resource} the located resource
 	 */
 	requestForResource: function(type, name, resourceLocator, cache)	{
 		if (type != undefined)
@@ -14598,8 +14594,9 @@ ResourceManager = Class.extend({
 	
 	/**
 	 * Ask the underlying resource locator for a custom resource
-	 * @param {customSelector} the selector used to retrieve the resource, depending on underlying the resource locator
-	 * @param {resourceLocator} Optional. The resource locator to be used in the current request
+	 * @param {String} customSelector the selector used to retrieve the resource, depending on underlying the resource locator
+	 * @param {Resource} resourceLocator Optional. The resource locator to be used in the current request
+	 * @returns {Resource} the located resource
 	 */
 	requestForCustomResource: function(customSelector, resourceLocator)	{
 		if (resourceLocator != undefined)	{
@@ -14614,27 +14611,31 @@ ResourceManager = Class.extend({
 });
 
 /**
- * ResourceLocator. Locate resource
+ * @class Locate resource
  * @augments Class
- * @author griever
  */
-ResourceLocator = Class.extend({
+ResourceLocator = Class.extend(
+/** @lends ResourceLocator# */
+{
+	
 	/**
-	 * Locate a resource based on its ID
+	 * Locate a resource based on its ID.
 	 * By default, this function do nothing
+	 * @param {String} resourceID the resource ID
 	 */
 	locateResource: function(resourceID)	{
 		
 	}
 });
 
-XuiResourceLocator = ResourceLocator.extend({
-	
-	/**
-	 * Locate resource based on its ID
-	 * @param {id} the resource ID
-	 * @returns {mixed} the resource or undefined
-	 */
+/**
+ * Create a new XuiResourceLocator
+ * @class A simple resource locator which using xui.js library
+ * @augments ResourceLocator
+ */
+XuiResourceLocator = ResourceLocator.extend(
+/** @lends XuiResourceLocator# */		
+{
 	locateResource: function(id)	{
 		if (JOOUtils.isTag(id))
 			return x$(id);
@@ -14643,11 +14644,11 @@ XuiResourceLocator = ResourceLocator.extend({
 //		}
 //		return undefined;
 	},
-	
+
 	/**
-	 * Locate resource based on the custom selector
-	 * @param {custom} the custom selector
-	 * @returns {mixed} the resource or undefined
+	 * Locate a resource using a custom selector
+	 * @param {String} custom the custom selector
+	 * @returns {Resource} the located resource
 	 */
 	locateCustomResource: function(custom)	{
 //		if (x$(custom).length > 0)	{
@@ -14658,17 +14659,13 @@ XuiResourceLocator = ResourceLocator.extend({
 });
 
 /**
- * JQuery Resource Locator. Locate resource using DOM
+ * Create a new JQueryResourceLocator
+ * @class JQuery Resource Locator.
  * @augments ResourceLocator
- * @author griever
  */
-JQueryResourceLocator = ResourceLocator.extend({
-	
-	/**
-	 * Locate resource based on its ID
-	 * @param {id} the resource ID
-	 * @returns {mixed} the resource or undefined
-	 */
+JQueryResourceLocator = ResourceLocator.extend(
+/** @lends JQueryResourceLocator# */
+{
 	locateResource: function(id)	{
 		if (JOOUtils.isTag(id))
 			return $(id);
@@ -14680,8 +14677,8 @@ JQueryResourceLocator = ResourceLocator.extend({
 	
 	/**
 	 * Locate resource based on the custom selector
-	 * @param {custom} the custom selector
-	 * @returns {mixed} the resource or undefined
+	 * @param {String} custom the custom selector
+	 * @returns {Resource} the located resource
 	 */
 	locateCustomResource: function(custom)	{
 //		if ($(custom).length > 0)	{
@@ -14694,16 +14691,14 @@ JQueryResourceLocator = ResourceLocator.extend({
 //JQuery Horizontal alignment plugin
 //(function ($) { $.fn.vAlign = function() { return this.each(function(i){ var h = $(this).height(); var oh = $(this).outerHeight(); var mt = (h + (oh - h)) / 2; $(this).css("margin-top", "-" + mt + "px"); $(this).css("top", "50%"); $(this).css("position", "absolute"); }); }; })(jQuery); (function ($) { $.fn.hAlign = function() { return this.each(function(i){ var w = $(this).width(); var ow = $(this).outerWidth(); var ml = (w + (ow - w)) / 2; $(this).css("margin-left", "-" + ml + "px"); $(this).css("left", "50%"); $(this).css("position", "absolute"); }); }; })(jQuery);
 
-/**
- * Manage a set of objects
- * @augments Class
- * @author griever
- */
-ObjectManager = Class.extend({
-	
+ObjectManager = Class.extend(
+/** @lends ObjectManager# */
+{
 	/**
 	 * Initialize fields
-	 * @constructor
+	 * @class Manage a set of objects. 
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function()	{
 		this.objects = new Array();
@@ -14713,8 +14708,7 @@ ObjectManager = Class.extend({
 
 	/**
 	 * Register an object to be managed by this
-	 * @function
-	 * @param {obj} the object to register
+	 * @param {Object} obj the object to register
 	 */
 	register: function(obj)	{
 		this.objects.push(obj);
@@ -14722,26 +14716,24 @@ ObjectManager = Class.extend({
 	
 	/**
 	 * Register a context
-	 * @function
-	 * @param {obj} the context to register
+	 * @param {Object} obj the context to register
 	 */
 	registerContext: function(obj)	{
 		this.context = obj;
 	},
 	
 	/**
-	 * main object is one visualize the idea, a main object usually is a collection of main image
+	 * Register main object.
+	 * Main object is the one visualizing the idea, a main object usually is a collection of main image
 	 * and other thing support for the display
-	 * @function
-	 * @param {obj} the main object
+	 * @param {Object} obj the main object
 	 */
 	registerMainObjects: function(obj)	{
 		this.mainObjects.push(obj);
 	},
 	
 	/**
-	 * Retrieve the main objects
-	 * @function
+	 * Retrieve main objects.
 	 * @returns {mixed} the main objects
 	 */
 	getMainObjects: function(){
@@ -14749,9 +14741,8 @@ ObjectManager = Class.extend({
 	},
 
 	/**
-	 * Remove object from the list
-	 * @function
-	 * @param {obj} the object to be removed
+	 * Remove object from the list.
+	 * @param {Object} obj the object to be removed
 	 */
 	remove: function(obj)	{
 		/*
@@ -14772,9 +14763,8 @@ ObjectManager = Class.extend({
 	},
 	
 	/**
-	 * Find an object using its ID
-	 * @function
-	 * @param {objId} the id of the object to be found
+	 * Find an object using its ID.
+	 * @param {mixed} objId the id of the object to be found
 	 * @returns {mixed} the object or undefined
 	 */
 	find: function(objId)	{
@@ -14786,8 +14776,7 @@ ObjectManager = Class.extend({
 	
 	/**
 	 * Find the index of the object having specific ID
-	 * @function
-	 * @param {objId} the id of the object to be found
+	 * @param {Object} objId the id of the object to be found
 	 * @returns {mixed} the index of the object or -1
 	 */
 	findIndex: function(objId)	{
@@ -14800,14 +14789,16 @@ ObjectManager = Class.extend({
 	}
 });
 
-/**
- * Entry-point class
- * @augments Class
- */
-Application = Class.extend({
+Application = Class.extend(
+/** @lends Application# */
+{
 	/**
 	 * Initialize fields
-	 * @constructor
+	 * @class This class is the entrypoint of JOO applications. 
+	 * @singleton
+	 * @augments Class
+	 * @constructs
+	 * @see SingletonFactory#getInstance
 	 */
 	init: function()	{
 		if(Application.singleton == undefined){
@@ -14820,8 +14811,7 @@ Application = Class.extend({
 	
 	/**
 	 * Access the application's resource manager
-	 * @function
-	 * @returns {mixed} the application's resource manager
+	 * @returns {ResourceManager} the application's resource manager
 	 */
 	getResourceManager: function()	{
 		return this.resourceManager;
@@ -14829,8 +14819,7 @@ Application = Class.extend({
 	
 	/**
 	 * Change the application's resource manager
-	 * @function
-	 * @param {ResourceManager} the resource manager to be used
+	 * @param {ResourceManager} rm the resource manager to be used
 	 */
 	setResourceManager: function(rm)	{
 		this.resourceManager = rm;
@@ -14838,8 +14827,7 @@ Application = Class.extend({
 	
 	/**
 	 * Get the system properties array
-	 * @function
-	 * @returns {mixed} the system properties
+	 * @returns {SystemProperty} the system properties
 	 */
 	getSystemProperties: function()	{
 		return this.systemProperties;
@@ -14847,16 +14835,14 @@ Application = Class.extend({
 	
 	/**
 	 * Change the bootstrap of the application
-	 * @function
-	 * @returns {Bootstrap} the bootstrap of the application
+	 * @returns {Bootstrap} bootstrap the bootstrap of the application
 	 */
 	setBootstrap: function(bootstrap)	{
 		this.bootstrap = bootstrap;
 	},
 	
 	/**
-	 * Begin the application. This should be called only once
-	 * @function
+	 * Start the application. This should be called only once
 	 */
 	begin: function()	{
 		this.bootstrap.run();
@@ -14864,7 +14850,6 @@ Application = Class.extend({
 
 	/**
 	 * Get the application's object manager
-	 * @function
 	 * @returns {ObjectManager} the application's object manager
 	 */
 	getObjectManager: function()	{
@@ -14875,10 +14860,16 @@ Application = Class.extend({
 });
 
 /**
- * Singleton Factory. Used to access initialize
+ * @class Access object in a singleton way
  */
 SingletonFactory = function(){};
 
+/**
+ * Get singleton instance of a class.
+ * @methodOf SingletonFactory
+ * @param {String} classname the className
+ * @returns the instance
+ */
 SingletonFactory.getInstance = function(classname){
 	if(classname.instance == undefined){
 		classname.singleton = 0;
@@ -14889,57 +14880,56 @@ SingletonFactory.getInstance = function(classname){
 };
 
 /**
- * IMPLEMENTOR & HANDLERS
+ * @class Base class of all "interfaces"
  */
-InterfaceImplementor = Class.extend({
-	
+InterfaceImplementor = Class.extend(
+/** @lends InterfaceImplementor# */	
+{
 	init: function(){
 		
 	},
-	
+
+	/**
+	 * Implement a class. Subclass should modify the <code>prototype</code>
+	 * of the class to add new features. See source code of subclass for 
+	 * more details
+	 * @param {Class} obj the class to be implemented
+	 */
 	implement: function(obj)	{
 		
 	}
 });
 
-Wrapper = {
+/**
+ * @class Used to wrap class using interface
+ * Wrapper allows developers to implement an interface for a class at runtime.
+ */
+Wrapper = 
+/** @lends Wrapper */
+{
+	/**
+	 * Wrap a class with specific interface.
+	 * @param {Class} obj the class to be wrapped
+	 * @param {InterfaceImplementor} i the interface to be implemented
+	 */
 	wrap: function(obj, i) {
 		obj.currentClass.implement(i);
 	}
 };
 
-Handler = Class.extend({
-	init: function(){
-		
-	},
-	
-	getEventName: function()	{
-		return "";
-	},
-	
-	onEvent: function(e)	{
-		
-	}
-});
-
 /**
- * Wrap the jquery object with our DisplayObject
- * In the future it will add classes, bind events... as well
+ * @class This interface make instances of a class cloneable
+ * @interface
  */
-JQueryWrapper = Class.extend({
-	init: function(obj, id)	{
-		obj.id = id;
-		this.obj = obj;
-	},
-	
-	getWrappedObject: function()	{
-		return this.obj;
-	}
-});
-
 CloneableInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj) {
+		/**
+		 * Clone the current object.
+		 * @methodOf CloneableInterface#
+		 * @name clone
+		 * @returns {Object} the clone object 
+		 */
 		obj.prototype.clone = obj.prototype.clone || function() {
 			var json = JSON.stringify(this);
 			return JSON.parse(json);
@@ -15047,10 +15037,21 @@ AjaxHandler = {
 		}
 	}
 };
+/**
+ * @class An interface enabling UI Components to be rendered
+ * using composition
+ * @interface
+ */
 CompositionRenderInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj) {
 		var _self = this;
+		
+		/**
+		 * Render the UI Component.
+		 * @methodOf CompositionRenderInterface#
+		 * @name renderUIComposition
+		 */
 		obj.prototype.renderUIComposition = obj.prototype.renderUIComposition || function() {
 			var composition = $($('#UI-'+this.className)[0].innerHTML);
 			_self.processElement(this, this, composition[0]);
@@ -15076,6 +15077,9 @@ CompositionRenderInterface = InterfaceImplementor.extend({
 			currentObject = obj[varName];
 			break;
 		default:
+			if (config.custom) {
+				config.custom = eval('('+config.custom+')');
+			}
 			var className = ClassMapping[tagName.split(':')[1]];
 			currentObject = new window[className](config);
 		}
@@ -15174,7 +15178,6 @@ JOOFont = Class.extend({
 	getUnderline: function()	{
 		return this.underline;
 	},
-	
 	setUnderline: function(underline)	{
 		this.underline = underline;
 	},
@@ -15184,12 +15187,28 @@ JOOFont = Class.extend({
 	}
 });
 
-EventDispatcher = Class.extend({
-	
+EventDispatcher = Class.extend(
+/**
+ * @lends EventDispatcher#
+ */	
+{
+
+	/**
+	 * Create a new EventDispatcher.
+	 * @class Base class for all event dispatchers (such as DisplayObject)
+	 * @constructs
+	 * @augments Class
+	 */
 	init: function() {
 		this.listeners = {};
 	},
 	
+	/**
+	 * Add a new listener for a specific event.
+	 * @param {String} event the event to be handled. 
+	 * @param {Function} handler the event handler. If you want to remove it
+	 * at a later time, it must not be an anonymous function
+	 */
 	addEventListener: function(event, handler) {
 		if (this.listeners[event] == undefined) {
 			this.listeners[event] = Array();
@@ -15197,8 +15216,12 @@ EventDispatcher = Class.extend({
 		this.listeners[event].push(handler);
 	},
 	
+	/**
+	 * Dispatch a event.
+	 * @param {String} event the event to be dispatched.
+	 */
 	dispatchEvent: function(event) {
-		if (this.listeners[event] != undefined) {
+		if (this.listeners && this.listeners[event] != undefined) {
 			var handlers = this.listeners[event];
 			var args = Array();
 			for(var i=1; i<arguments.length; i++) {
@@ -15212,8 +15235,13 @@ EventDispatcher = Class.extend({
 		}
 	},
 	
+	/**
+	 * Remove a handler for a specific event.
+	 * @param {String} event the event of handler to be removed 
+	 * @param {Function} handler the handler to be removed
+	 */
 	removeEventListener: function(event, handler) {
-		if (this.listeners[event] != undefined) {
+		if (this.listeners && this.listeners[event] != undefined) {
 			var index = this.listeners[event].indexOf(handler);
 			if (index != -1)
 				this.listeners[event].splice(index, 1);
@@ -15229,11 +15257,28 @@ EventDispatcher = Class.extend({
 	}
 });
 
+DisplayObject = EventDispatcher.extend(
 /**
- * Base displayable object
+ * @lends DisplayObject#
  */
-DisplayObject = EventDispatcher.extend({
-	
+{
+	/**
+	 * Create a new DisplayObject
+	 * @constructs
+	 * @class
+	 * <p>Base class for all JOO UI components</p>
+	 * <p>It supports the following configuration parameters:</p>
+	 * <ul>
+	 * 	<li><code>tooltip</code> The tooltip of the object</li>
+	 * 	<li><code>absolute</code> Whether position remains intact or not</li>
+	 * 	<li><code>x</code> X of component. The <code>absolute</code> parameter must be false</li>
+	 * 	<li><code>y</code> Y of component. The <code>absolute</code> parameter must be false</li>
+	 * 	<li><code>width</code> Width of component</li>
+	 * 	<li><code>height</code> Height of component</li>
+	 * 	<li><code>custom</code> Custom styles of component</li>
+	 * </ul>
+	 * @augments EventDispatcher
+	 */
 	init: function(config) {
 		this._super();
 		this.domEventBound = {};
@@ -15249,19 +15294,31 @@ DisplayObject = EventDispatcher.extend({
 		objMgr.register(this);
 	},
 	
+	/**
+	 * Update the stage of current component.
+	 * This method is not intended to be used by developers.
+	 * It is called automatically from JOO when an object is added to a stage
+	 * directly or indirectly.
+	 * @private
+	 * @param {Stage} stage new Stage of current component
+	 */
 	updateStage: function(stage) {
 		if (stage != this.stage) {
 			this.stage = stage;
 			this.dispatchEvent("stageUpdated");
 		}
 	},
-	
+
+	/**
+	 * Make this component sketched by another one
+	 * @param {DisplayObject} parent the component that this component anchors to
+	 */
 	anchorTo: function(parent) {
 		this.setLocation(0, 0);
 		this.setStyle('width', parent.getWidth());
 		this.setStyle('height', parent.getHeight());
 	},
-	
+
 	addEventListener: function(event, handler) {
 		if (this.domEventBound[event] != true) {
 			this.access().bind(event, {_self: this, event: event}, this.bindEvent );
@@ -15290,7 +15347,12 @@ DisplayObject = EventDispatcher.extend({
 	_appendBaseClass: function(className) {
 		this.classes.push(className);
 	},
-	
+
+	/**
+	 * Initialize variables
+	 * @private
+	 * @param {object} config configuration parameters
+	 */
 	setupBase: function(config) {
 		this._appendBaseClass(this.className);
 		for(var i=this.ancestors.length-1; i>=0; i--) {
@@ -15298,7 +15360,7 @@ DisplayObject = EventDispatcher.extend({
 				this._appendBaseClass(this.ancestors[i].prototype.className);
 			}
 		}
-		this.id = this.id || generateId(this.className.toLowerCase());
+		this.id = this.id || config.id || generateId(this.className.toLowerCase());
 		this._parent = undefined;
 		this._super(config);
 	},
@@ -15315,7 +15377,12 @@ DisplayObject = EventDispatcher.extend({
 		this.roundDeltaW = 0;
 		this.roundDeltaH = 0;
 	},
-	
+
+	/**
+	 * Initialize UI
+	 * @private
+	 * @param {object} config configuration parameters
+	 */
 	setupDomObject: function(config) {
 		this.domObject = JOOUtils.accessCustom(this.toHtml());
 		this.setAttribute('id', this.id);
@@ -15328,13 +15395,20 @@ DisplayObject = EventDispatcher.extend({
 		
 		if (config.tooltip)
 			this.setAttribute('title', config.tooltip);
-		if (config.absolute != true) {
+		if (!config.absolute) {
 			var x = config.x || 0;
 			var y = config.y || 0;
 			this.setLocation(x, y);
 		}
 		if (config['background-color'] != undefined)
 			this.setStyle('background-color', config['background-color']);
+		
+		if (config.extclasses) {
+			var cls = config.extclasses.split(',');
+			for(var i=0; i<cls.length; i++) {
+				this.access().addClass(cls[i]);
+			}
+		}
 
 		if (config.width != undefined)
 			this.setWidth(config.width);
@@ -15348,6 +15422,10 @@ DisplayObject = EventDispatcher.extend({
 		}
 	},
 	
+	/**
+	 * Change width of component
+	 * @param {String|Number} w new width of component
+	 */
 	setWidth: function(w) {
 		if (!isNaN(w) && w != '') {
 			w = parseFloat(w);
@@ -15357,7 +15435,11 @@ DisplayObject = EventDispatcher.extend({
 		}
 		this.setStyle('width', w);
 	},
-	
+
+	/**
+	 * Change height of component
+	 * @param {String|Number} h new height of component
+	 */
 	setHeight: function(h) {
 		if (!isNaN(h) && h != '') {
 			h = parseFloat(h);
@@ -15367,24 +15449,45 @@ DisplayObject = EventDispatcher.extend({
 		}
 		this.setStyle('height', h);
 	},
-	
+
+	/**
+	 * Get current width of component (without border, outline & margin)
+	 * @returns {String|Number} width of component
+	 */
 	getWidth: function() {
 		return this.access().width();
 	},
-	
+
+	/**
+	 * Get current height of component (without border, outline & margin)
+	 * @returns {String|Number} height of component
+	 */
 	getHeight: function() {
 		return this.access().height();
 	},
-	
+
+	/**
+	 * Get the current location of component
+	 * @returns {Object} location of component
+	 */
 	getLocation: function() {
 		return {x: this.getX(), y: this.getY()};
 	},
-	
+
+	/**
+	 * Change the location of component
+	 * @param {String|Number} x new x coordinate
+	 * @param {String|Number} y new y coordinate
+	 */
 	setLocation: function(x, y) {
 		this.setX(x);
 		this.setY(y);
 	},
 	
+	/**
+	 * Get the current x position of component
+	 * @returns {String|Number} current x position
+	 */
 	getX: function() {
 		var left = this.getStyle("left");
 		if (left.length > 2)
@@ -15394,13 +15497,22 @@ DisplayObject = EventDispatcher.extend({
 		return left;
 	},
 	
+	/**
+	 * Change the x position of component 
+	 * @param {Number} the current x position 
+	 */
 	setX: function(x) {
+		x = parseFloat(x);
 		if (isNaN(x)) return;
 		x += this.roundDeltaX;
 		this.roundDeltaX = x - Math.floor(x);
 		this.setStyle('left', Math.floor(x)+'px');
 	},
 	
+	/**
+	 * Get the current y position of component
+	 * @returns {String|Number} current y position
+	 */
 	getY: function() {
 		var top = parseFloat(this.getStyle('top'));
 		if (top.length > 2)
@@ -15410,53 +15522,105 @@ DisplayObject = EventDispatcher.extend({
 		return top;
 	},
 	
+	/**
+	 * Change the y position of component 
+	 * @param {Number} the current y position 
+	 */
 	setY: function(y) {
+		y = parseFloat(y);
 		if (isNaN(y)) return;
 		y += this.roundDeltaY;
 		this.roundDeltaY = y - Math.floor(y);
 		this.setStyle('top', Math.floor(y)+'px');
 	},
 	
+	/**
+	 * Get current rotation angle
+	 * @returns {Number} current rotation (in degree)
+	 */
 	getRotation: function() {
 		return this.rotation;
 	},
-	
+
+	/**
+	 * Change the rotation angle
+	 * @param {Number} r the new rotation angle in degree
+	 */
 	setRotation: function(r) {
 		this.rotation = r;
 		this.setCSS3Style('transform', 'rotate('+r+'deg)');
 	},
 	
+	/**
+	 * Change DOM attribute
+	 * @param {String} attrName the attribute name
+	 * @param {String} value the attribute value
+	 */
 	setAttribute: function(attrName, value) {
 		this.access().attr(attrName, value);
 	},
-	
+
+	/**
+	 * Get value of a DOM attribute
+	 * @param attrName the attribute name
+	 * @returns {String} the attribute value
+	 */
 	getAttribute: function(attrName) {
 		return this.access().attr(attrName);
 	},
-	
+
+	/**
+	 * Get all DOM attributes mapped by name
+	 * @returns {Object} the attributes map
+	 */
 	getAttributes: function() {
 		return JOOUtils.getAttributes(this.access()[0]);
 	},
-	
+
+	/**
+	 * Remove a DOM attribute
+	 * @param {String} name the attribute name
+	 */
 	removeAttribute: function(name) {
 		this.access().removeAttr(name);
 	},
 	
+	/**
+	 * Whether a DOM attribute exists
+	 * @param {String} name the attribute name
+	 * @returns {Boolean} <code>true</code> if the attribute exists, otherwise returns <code>false</code>
+	 */
 	hasAttribute: function(name) {
 		return this.access().attr(name) != undefined;
 	},
-	
+
+	/**
+	 * Change a style
+	 * @param {String} k the style name
+	 * @param {String} v the style value
+	 * @param {Boolean} silent whether event is omitted or dispatched
+	 */
 	setStyle: function(k, v, silent) {
 		if (silent)
 			this.access().silentCss(k, v);
 		else
 			this.access().css(k, v);
 	},
-	
+
+	/**
+	 * Get value of a style
+	 * @param {String} k the style name
+	 * @returns {String} the style value
+	 */
 	getStyle: function(k) {
 		return this.access().css(k);
 	},
-	
+
+	/**
+	 * Get the computed value of a style
+	 * @param {String} k the style name 
+	 * @returns {String} the style computed value
+	 */
 	getComputedStyle: function(k) {
 		var s = this.access().getStyleObject()[k];
 		if (s == undefined)
@@ -15464,6 +15628,12 @@ DisplayObject = EventDispatcher.extend({
 		return s;
 	},
 	
+	/**
+	 * Change a CSS3 style.
+	 * It works by adding CSS3-prefixes to the style name
+	 * @param {String} k the style name
+	 * @param {String} v the style value
+	 */
 	setCSS3Style: function(k, v) {
 		this.setStyle(k, v);
 		this.setStyle('-ms-'+k, v);
@@ -15497,10 +15667,19 @@ DisplayObject = EventDispatcher.extend({
 		return this.id;
 	},
 	
+	/**
+	 * Get the corresponding Resource object.
+	 * @returns {Resource} the Resource object
+	 */
 	access: function() {
 		return this.domObject;
 	},
-	
+
+	/**
+	 * Specify HTML content of current component.
+	 * Subclass can override this method to specify its own content
+	 * @returns {String}
+	 */
 	toHtml: function() {
 		return "";
 	},
@@ -15532,7 +15711,14 @@ DisplayObject = EventDispatcher.extend({
 			this.setStyle("color",font.color);
 		}
 	},
-	
+
+	/**
+	 * Dispose the current component.
+	 * <p>It is not intended to be used by developers, as this method
+	 * does not remove the current component from its parent's <code>children</code> array.
+	 * Developers should use the <code>selfRemove</code> method instead.</p>
+	 * @private
+	 */
 	dispose: function() {
 		this.dispatchEvent('dispose');
 		
@@ -15551,6 +15737,12 @@ DisplayObject = EventDispatcher.extend({
 		}
 	},
 	
+	/**
+	 * Dispose the current component and remove reference from its parent.
+	 * This method can be called by developers.
+	 * <p>Note that developers must also remove any extra references before
+	 * disposing a component to prevent memory leaks</p>
+	 */
 	selfRemove: function() {
 		if (this._parent != undefined)
 			this._parent.removeChild(this);
@@ -15558,6 +15750,12 @@ DisplayObject = EventDispatcher.extend({
 			this.dispose();
 	},
 	
+	/**
+	 * Enable/Disable current component. 
+	 * Disabled component itself can still dispatch events but all of its
+	 * event listeners are disabled
+	 * @param {Boolean} disabled whether disable or enable the component
+	 */
 	disable: function(disabled) {
 		//TODO check if the disabled flag is actually changed
 		
@@ -15578,10 +15776,20 @@ DisplayObject = EventDispatcher.extend({
 });
 
 /**
- * Container class. A container is an object which 'contains' other objects
+ * This class is abstract and should be subclassed.
+ * @class Base class for containers. A container is a component 
+ * which contains other components.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>layout</code> The layout of current component. See <code>setLayout</code> method</li>
+ * </ul>
+ * @augments DisplayObject
  */
-DisplayObjectContainer = DisplayObject.extend({
-	
+DisplayObjectContainer = DisplayObject.extend(
+/**
+ * @lends DisplayObjectContainer#
+ */
+{
 	updateStage: function(stage) {
 		this._super(stage);
 		for(var i=0; i<this.children.length; i++) {
@@ -15643,9 +15851,9 @@ DisplayObjectContainer = DisplayObject.extend({
 	
 	/**
 	 * Offset (top-left coordinate) relative to the document 'as if' the object is not transformed
+	 * @private
 	 */
 	virtualNontransformedOffset: function() {
-//		var selfPos = this.offset();
 		var width = parseFloat(this.getWidth());
 		var height = parseFloat(this.getHeight());
 		return getPositionFromRotatedCoordinate({
@@ -15656,9 +15864,9 @@ DisplayObjectContainer = DisplayObject.extend({
 
 	/**
 	 * Offset (top-left coordinate) relative to the document assuming the object is transformed
+	 * @private
 	 */
 	transformedOffset: function() {
-//		var selfPos = this.offset();
 		var width = parseFloat(this.getWidth());
 		var height = parseFloat(this.getHeight());
 		return getPositionFromRotatedCoordinate({
@@ -15669,6 +15877,7 @@ DisplayObjectContainer = DisplayObject.extend({
 	
 	/**
 	 * Same as virtualNontransformedOffset
+	 * @private
 	 */
 	offset: function() {
 		var x = 0, y = 0;
@@ -15688,13 +15897,22 @@ DisplayObjectContainer = DisplayObject.extend({
 			y: y
 		};
 	},
-	
+
+	/**
+	 * Add a component before a Resource object.
+	 * @param {DisplayObject} obj the component to be added 
+	 * @param {Resource} positionObj the Resource object
+	 */
 	addChildBeforePosition: function(obj, positionObj)	{
 		this._prepareAddChild(obj);
 		obj.access().insertBefore(positionObj);
 		obj.updateStage(this.stage);
 	},
 	
+	/**
+	 * Add a component at the end of current container.
+	 * @param {DisplayObject} obj the component to be added 
+	 */
 	addChild: function(obj)	{
 		this._prepareAddChild(obj);
 		obj.access().appendTo(this.access());
@@ -15708,6 +15926,10 @@ DisplayObjectContainer = DisplayObject.extend({
 		obj._parent = this;
 	},
 	
+	/**
+	 * Remove a child component.
+	 * @param {DisplayObject} object the component to be removed
+	 */
 	removeChild: function(object)	{
 		for(var i=0;i<this.children.length;i++)	{
 			var obj = this.children[i];
@@ -15718,12 +15940,22 @@ DisplayObjectContainer = DisplayObject.extend({
 		}
 	},
 	
+	/**
+	 * Remove a child component at specific index. 
+	 * @param {Number} index the index of the component to be removed
+	 */
 	removeChildAt: function(index) {
 		var object = this.children[index];
 		this.children.splice(index, 1);
 		object.dispose();
 	},
-	
+
+	/**
+	 * Detach (but not dispose) a child component.
+	 * The component will be detached from DOM, but retains
+	 * its content, listeners, etc.
+	 * @param {DisplayObject} object the object to be detached
+	 */
 	detachChild: function(object)	{
 		for(var i=0;i<this.children.length;i++)	{
 			var obj = this.children[i];
@@ -15733,11 +15965,20 @@ DisplayObjectContainer = DisplayObject.extend({
 			}
 		}
 	},
-	
+
+	/**
+	 * Get all children of the container.
+	 * @returns {Array} an array of this container's children
+	 */
 	getChildren: function()	{
 		return this.children;
 	},
 	
+	/**
+	 * Get a child component with specific id.
+	 * @param {Number} id the id of the child component
+	 * @returns {DisplayObject} the child component with specified id
+	 */
 	getChildById: function(id) {
 		for(var i in this.children) {
 			if (this.children[i].getId() == id)
@@ -15746,6 +15987,16 @@ DisplayObjectContainer = DisplayObject.extend({
 		return undefined;
 	},
 	
+	/**
+	 * Change the layout of this container.
+	 * <p>Supported layouts are:</p>
+	 * <ul>
+	 * 	<li><code>absolute</code>: All children have absolute position</li>
+	 * 	<li><code>flow</code>: All children have relative position</li>
+	 * 	<li><code>vertical</code>: All children have block display</li>
+	 * </ul>
+	 * @param {String} layout new layout
+	 */
 	setLayout: function(layout) {
 		if (this.layout != undefined)
 			this.access().removeClass('joo-layout-'+this.layout);
@@ -15761,6 +16012,14 @@ DisplayObjectContainer = DisplayObject.extend({
 	}
 });
 
+/**
+ * @class A component with custom HTML.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>html</code> Custom HTML</li>
+ * </ul>
+ * @augments DisplayObjectContainer
+ */
 CustomDisplayObject = DisplayObjectContainer.extend({
 
 	setupDomObject: function(config) {
@@ -15768,18 +16027,33 @@ CustomDisplayObject = DisplayObjectContainer.extend({
 	}
 });
 
-
-Graphic = DisplayObject.extend({
-	
+/**
+ * @class A component into which can be painted.
+ * @augments DisplayObject
+ */
+Graphic = DisplayObject.extend(
+/** @lends Graphic# */
+{
+	/**
+	 * Clear & repaint the component.
+	 * @param {String} html content to be repainted
+	 */
 	repaint: function(html) {
 		this.access().html(html);
 	},
 	
+	/**
+	 * Paint (append) specific content to the component.
+	 * @param {String} html content to be painted
+	 */
 	paint: function(html) {
 		this.access().append(html);
 	},
-	
-	clear: function(html) {
+
+	/**
+	 * Clear the current content.
+	 */
+	clear: function() {
 		this.access().html("");
 	},
 	
@@ -15788,24 +16062,29 @@ Graphic = DisplayObject.extend({
 	}
 });
 
-Sketch = DisplayObjectContainer.extend({
-	
+/**
+ * Create a new Sketch
+ * @class A concrete subclass of DisplayObjectContainer.
+ * It is a counterpart of <code>HTML DIV</code> element
+ * @augments DisplayObjectContainer
+ */
+Sketch = DisplayObjectContainer.extend(
+/** @lends Sketch# */
+{
 	setupDomObject: function(config) {
 		this._super(config);
-//		this.access().append("<div class='joo-position-relative'></div>");
 	},
-	
-//	addChild: function(obj)	{
-//		this._prepareAddChild(obj);
-//		obj.access().appendTo(this.access().find('.joo-position-relative'));
-//		obj.afterAdded();
-//	},
 	
 	toHtml: function()	{
 		return "<div></div>";
 	}
 });
 
+/**
+ * Create a new Panel
+ * @class A panel, which has a <code>inline-block</code> display
+ * @augments Sketch
+ */
 Panel = Sketch.extend({
 	
 });
@@ -15814,9 +16093,9 @@ ContextableInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj) {
 		obj.prototype.setupContextMenu = obj.prototype.setupContextMenu || function() {
-			this.contextMenu = new JOOContextMenu(this);
-			this.addChild(this.contextMenu);
-			this.contextMenu.hide();
+			if (!this.contextMenu) {
+				this.contextMenu = new JOOContextMenu();
+			}
 		};
 		
 		obj.prototype.getContextMenu = obj.prototype.getContextMenu || function() {
@@ -15826,10 +16105,12 @@ ContextableInterface = InterfaceImplementor.extend({
 		obj.prototype.contextMenuHandler = obj.prototype.contextMenuHandler || function(e) {
 			e.preventDefault();
 			this.getContextMenu().show(e.clientX+2, e.clientY+2);
-			this.dispatchEvent("showContextMenu",e);
+			this.dispatchEvent("showContextMenu", e);
 		};
 		
 		obj.prototype.attachContextMenu = obj.prototype.attachContextMenu || function(useCapturePhase) {
+			this.addChild(this.contextMenu);
+			this.contextMenu.hide();
 			this.addEventListener('contextmenu', function(e) {
 				this.contextMenuHandler(e);
 				e.stopPropagation();
@@ -15841,11 +16122,20 @@ ContextableInterface = InterfaceImplementor.extend({
 	}
 });
 
-UIComponent = Sketch.extend({
+/**
+ * @class Abstract base class for other UI controls. All UIComponent subclasses
+ * is equipped with a {@link JOOContextMenu}
+ * @augments DisplayObjectContainer
+ */
+UIComponent = DisplayObjectContainer.extend({
 	
 	setupDomObject: function(config) {
 		this._super(config);
 		this.setupContextMenu();
+	},
+	
+	toHtml: function() {
+		return "<div></div>";
 	}
 }).implement(ContextableInterface);
 
@@ -15858,8 +16148,18 @@ UIRenderInterface = InterfaceImplementor.extend({
 	}
 });
 
-Stage = UIComponent.extend({
-
+/**
+ * @class The Stage is a special UI component, which hosts, manages selection 
+ * and renders other UI components
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>allowMultiSelect</code> whether multi-selection is allowed</li>
+ * </ul>
+ * @augments UIComponent
+ */
+Stage = UIComponent.extend(
+/** @lends Stage# */
+{
 	setupBase: function(config)	{
 		this.stage = this;
 		this.id = config.id;
@@ -15868,18 +16168,34 @@ Stage = UIComponent.extend({
 		this._super(config);
 	},
 	
+	/**
+	 * Get a list of current selected objects.
+	 * @returns {Array} current selected objects
+	 */
 	getSelectedObjects: function() {
 		return this.selectedObjects;
 	},
 	
+	/**
+	 * Delete all selected objects.
+	 */
 	deleteSelectedObjects: function() {
 		for(var i=0;i<this.selectedObjects.length;i++) {
 			this.selectedObjects[i].stageDeselect();
 			this.selectedObjects[i].selfRemove();
 		}
 		this.selectedObjects = Array();
+		this.dispatchEvent('selectedChange');
 	},
-	
+
+	/**
+	 * Deselect specific selected object.
+	 * <p>Usually developers should use the {@link SelectableInterface} 
+	 * rather than calling this method directly
+	 * </p>
+	 * @param {SelectableInterface} obj the object to be deselected.
+	 * It <b>should</b> be a selected object.
+	 */
 	removeSelectedObject: function(obj) {
 		if (typeof obj['stageDeselect'] == 'undefined')
 			throw 'Object '+obj+' is not deselectable';
@@ -15888,22 +16204,38 @@ Stage = UIComponent.extend({
 			obj.selected = false;
 			obj.stageDeselect();
 			this.selectedObjects.splice(index, 1);
+			this.dispatchEvent('selectedChange');
 /*			
 			var subject = SingletonFactory.getInstance(Subject);
 			subject.notifyEvent('ObjectDeselected', obj);*/
 		}
 	},
 	
+	/**
+	 * Deselect all objects, which is previously selected under this Stage.
+	 */
 	deselectAllObjects: function() {
 		for(var i=0;i<this.selectedObjects.length;i++) {
 			this.selectedObjects[i].stageDeselect();
 		}
 		this.selectedObjects = Array();
+		this.dispatchEvent('selectedChange');
 		
 /*		var subject = SingletonFactory.getInstance(Subject);
 		subject.notifyEvent('AllObjectDeselected');*/
 	},
-	
+
+	/**
+	 * Add a component to the list of selected objects.
+	 * It will call the <code>stageSelect</code> method
+	 * of the component automatically.
+	 * <p>
+	 * If either <code>isMultiSelect</code> or <code>allowMultiSelect</code>
+	 * is <code>false</code>, previously selected objects will be deselected.
+	 * </p>
+	 * @param {SelectableInterface} obj the object to selected
+	 * @param {Boolean} isMultiSelect whether this selection is a multi-selection
+	 */
 	addSelectedObject: function(obj, isMultiSelect) {
 		if (typeof obj['stageSelect'] == 'undefined')
 			throw 'Object '+obj+' is not selectable';
@@ -15917,6 +16249,7 @@ Stage = UIComponent.extend({
 		obj.selected = true;
 		obj.stageSelect();
 		this.selectedObjects.push(obj);
+		this.dispatchEvent('selectedChange');
 		
 		var subject = SingletonFactory.getInstance(Subject);
 		subject.notifyEvent('ObjectSelected', obj);
@@ -15934,12 +16267,16 @@ Stage = UIComponent.extend({
 	}
 });
 
+/**
+ * Create a new Canvas
+ * @class A counterpart of <code>HTML5 Canvas</code>
+ * @augments DisplayObject
+ */
 Canvas = DisplayObject.extend({
 	
-	setupBase: function(x, y, width, height)	{
-		this._appendBaseClass("Canvas");
+	setupBase: function(config)	{
 		this.context = undefined;
-		this._super();
+		this._super(config);
 	},
 	
 	getContext: function()	{
@@ -16297,6 +16634,10 @@ CanvasContext = Class.extend({
     }
 });
 
+/**
+ * @class A counterpart of <code>HTML HR</code> element
+ * @augments DisplayObject 
+ */
 Separator = DisplayObject.extend({
 	
 	toHtml: function() {
@@ -16304,7 +16645,20 @@ Separator = DisplayObject.extend({
 	}
 });this.items = new Array();
 
-JOOMenuItem = Sketch.extend({
+/**
+ * @class A menu item, which is attached with a command and 
+ * can be added to a {@link JOOMenu} or {@link JOOContextMenu}
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>command</code> A function which is called automatically when
+ * 		the menu item is clicked
+ * 	</li>
+ * </ul>
+ * @augments Sketch 
+ */
+JOOMenuItem = Sketch.extend(
+/** @lends JOOMenuItem# */		
+{
 	
 	setupDomObject: function(config) {
 		this._super(config);
@@ -16320,11 +16674,26 @@ JOOMenuItem = Sketch.extend({
 	_outputText: function(label) {
 		this.access().html(label);
 	},
-	
+
+	/**
+	 * The default command, if no command is attached to this menu
+	 * @param e
+	 */
 	onclick: function(e) {}
 });
 
-JOOMenu = JOOMenuItem.extend({
+/**
+ * @class A group of menu items or menus. Like its superclass {@link JOOMenuItem},
+ * a menu can be attached with a command
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>icon</code> The icon of the menu</li>
+ * </ul>
+ * @augments JOOMenuItem
+ */
+JOOMenu = JOOMenuItem.extend(
+/** @lends JOOMenu# */
+{
 	
 	setupBase: function(config) {
 		this.items = new Array();
@@ -16348,11 +16717,19 @@ JOOMenu = JOOMenuItem.extend({
 			this.access().html('<a class="joo-menu-label">'+label+'</a>');
 	},
 	
+	/**
+	 * Add a menu item or another menu to this menu
+	 * @param {JOOMenuItem|JOOMenu} item the item to be added
+	 */
 	addItem: function(item) {
 		this.items.push(item);
 		this.menuHolder.addChild(item);
 	},
-	
+
+	/**
+	 * Get all menu items and submenus
+	 * @returns {Array} an array of menu items & submenus
+	 */
 	getItems: function() {
 		return this.items;
 	},
@@ -16361,13 +16738,19 @@ JOOMenu = JOOMenuItem.extend({
 		this.toggleMenuItems();
 	},
 
+	/**
+	 * Toggle (show/hide) menu items
+	 */
 	toggleMenuItems: function() {
 		if (this.isShown)
 			this.hideMenuItems();
 		else
 			this.showMenuItems();
 	},
-	
+
+	/**
+	 * Show all menu items
+	 */
 	showMenuItems: function() {
 		if (this.items.length > 0) {
 			this.menuHolder.access().show();
@@ -16376,7 +16759,10 @@ JOOMenu = JOOMenuItem.extend({
 			this.dispatchEvent('menuShown');
 		}
 	},
-	
+
+	/**
+	 * Hide all menu items
+	 */
 	hideMenuItems: function() {
 		this.menuHolder.access().hide();
 		this.access().removeClass('active');
@@ -16385,8 +16771,13 @@ JOOMenu = JOOMenuItem.extend({
 	}
 });
 
-JOOMenuBar = UIComponent.extend({
-	
+/**
+ * @class A set of menu, which is usually placed at the top of the application
+ * @augments UIComponent
+ */
+JOOMenuBar = UIComponent.extend(
+/** @lends JOOMenuBar# */		
+{
 	setupBase: function(config) {
 		this.items = new Array();
 		this.activeMenus = 0;
@@ -16400,13 +16791,20 @@ JOOMenuBar = UIComponent.extend({
 			_self.hideAllMenus();
 		});
 	},
-	
+
+	/**
+	 * Hide all menus and their menu items
+	 */
 	hideAllMenus: function() {
 		for(var i=0; i<this.items.length; i++) {
 			this.items[i].hideMenuItems();
 		}
 	},
-	
+
+	/**
+	 * Add a new menu to the bar
+	 * @param {JOOMenu} item the menu to be added
+	 */
 	addItem: function(item) {
 		this.items.push(item);
 		this.addChild(item);
@@ -16429,27 +16827,52 @@ JOOMenuBar = UIComponent.extend({
 		});
 	},
 	
+	/**
+	 * Get all menus of the bar
+	 * @returns {Array} an array of menus this bar contains
+	 */
 	getItems: function() {
 		return this.items;
 	}
 });
 
+/**
+ * @class A context (or popup) menu. It can be attached to any other components
+ * @augments Sketch
+ */
 JOOContextMenu = Sketch.extend({
 	
 	setupBase: function(config)	{
 		this.items = new Array();
 		this._super(config);
 	},
-	
+
+	/**
+	 * Add a menu item
+	 * @param {JOOMenuItem} item a menu item to be added
+	 */
 	addItem: function(item) {
 		this.items.push(item);
+		var _self = this;
+		item.addEventListener('click', function() {
+			_self.hide();
+		});
 		this.addChild(item);
 	},
-	
+
+	/**
+	 * Get all menu items
+	 * @returns {Array} an array of menu items of this context menu
+	 */
 	getItems: function() {
 		return this.items;
 	},
-	
+
+	/**
+	 * Show the context menu at specific position
+	 * @param {String|Number} x x position
+	 * @param {String|Number} y y position
+	 */
 	show: function(x, y) {
 		var subject = SingletonFactory.getInstance(Subject);
 		subject.notifyEvent('ContextMenuShown', this);
@@ -16457,13 +16880,25 @@ JOOContextMenu = Sketch.extend({
 		this.access().show();
 	},
 	
+	/**
+	 * Hide the context menu
+	 */
 	hide: function() {
 		this.access().hide();
 	}
 });
 
-JOOIFrame = Sketch.extend({
-	
+/**
+ * @class A counterpart of <code>HTML IFRAME</code> element
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>src</code> The source of the iframe</li>
+ * </ul>
+ * @augments Sketch
+ */
+JOOIFrame = Sketch.extend(
+/** @lends JOOIFrame# */		
+{
 	setupBase: function(config) {
 		this._super(config);
 	},
@@ -16475,10 +16910,18 @@ JOOIFrame = Sketch.extend({
 		this.setAttribute('name', this.getId());
 	},
 	
+	/**
+	 * Change source of the iframe
+	 * @param {String} src new source (URL) of the iframe
+	 */
 	setSrc: function(src) {
 		this.setAttribute('src', src);
 	},
-	
+
+	/**
+	 * Get the source of the iframe
+	 * @returns {String} the source of the iframe
+	 */
 	getSrc: function() {
 		return this.getAttribute('src');
 	},
@@ -16488,7 +16931,18 @@ JOOIFrame = Sketch.extend({
 	}
 });
 
-JOOForm = Sketch.extend({
+/**
+ * @class A counterpart of <code>HTML Form</code>
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>method</code> The method used when submitting the form</li>
+ * 	<li><code>encType</code> The encoded type, the default type is <code>application/x-www-form-urlencoded</code></li>
+ * </ul>
+ * @augments Sketch
+ */
+JOOForm = Sketch.extend(
+/** @lends JOOForm# */
+{
 	
 	setupDomObject: function(config) {
 		this._super(config);
@@ -16497,7 +16951,10 @@ JOOForm = Sketch.extend({
 		this.setAttribute("method", config.method);
 		this.setAttribute("enctype", config.encType);
 	},
-	
+
+	/**
+	 * Submit the form
+	 */
 	submit: function() {
 		this.access().submit();
 	},
@@ -16514,13 +16971,34 @@ ContainerWrapper = Class.extend({
 		return container;
 	}
 });
+/**
+ * @class An interface which allows UI Component to be selectable.
+ * @interface
+ */
 SelectableInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj) {
+		
+		/**
+		 * A protected method, define the behavior of the selection.
+		 * By default, it does nothing. Subclass can override it to
+		 * change the behavior.
+		 */
 		obj.prototype._select = obj.prototype._select || function() {};
 		
+		/**
+		 * A protected method, define the behavior of the de-selection.
+		 * By default, it does nothing. Subclass can override it to
+		 * change the behavior.
+		 */
 		obj.prototype._deselect = obj.prototype._deselect || function() {};
 		
+		/**
+		 * Select the component. Add the component to the stage's list of selection.
+		 * @methodOf SelectableInterface#
+		 * @name select
+		 * @param {Boolean} isMultiSelect whether this is a multi-selection
+		 */
 		obj.prototype.select = obj.prototype.select || function(isMultiSelect) {
 			this.dispatchEvent('beforeSelected');
 			if (this.blockSelect != true) {
@@ -16529,16 +17007,34 @@ SelectableInterface = InterfaceImplementor.extend({
 			}
 		},
 		
+		/**
+		 * Deselect the component. Remove the component from the stage's list of selection.
+		 * @methodOf SelectableInterface#
+		 * @name deselect
+		 * @param {Boolean} isMultiSelect whether this is a multi-selection
+		 */
 		obj.prototype.deselect = obj.prototype.deselect || function() {
 			this.stage.removeSelectedObject(this);
 		},
 		
+		/**
+		 * This method is called internally by the Stage, before the 
+		 * component is actually selected.
+		 * @methodOf SelectableInterface#
+		 * @name stageSelect
+		 */
 		obj.prototype.stageSelect = obj.prototype.stageSelect || function() {
 			this.access().addClass('selected');
 			this._select();
 			this.dispatchEvent('selected');
 		},
 		
+		/**
+		 * This method is called internally by the Stage, before the 
+		 * component is actually deselected.
+		 * @methodOf SelectableInterface#
+		 * @name stageDeselect
+		 */
 		obj.prototype.stageDeselect = obj.prototype.stageDeselect || function() {
 			this.access().removeClass('selected');
 			this._deselect();
@@ -16547,22 +17043,58 @@ SelectableInterface = InterfaceImplementor.extend({
 	}
 });
 
+/**
+ * @class An interface which allows UI Component to be draggable.
+ * @interface
+ */
 DraggableInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj){
+		
+		obj.prototype.onDrag = obj.prototype.onDrag || function(e) {
+			
+		};
+		
+		obj.prototype.onDragStart = obj.prototype.onDragStart || function(e) {
+			
+		};
+		
+		/**
+		 * Make the component draggable. It position will be changed to absolute.
+		 * @methodOf DraggableInterface#
+		 * @name draggable
+		 * @param {Object} param the parameters passed to the draggable engine
+		 */
 		obj.prototype.draggable = obj.prototype.draggable || function(param) {
 			this.access().draggable(param);
 			this.setStyle('position', 'absolute');
 		};
 		
+		/**
+		 * A method called before the component is dragged. Override this method
+		 * to change the behavior.
+		 * @methodOf DraggableInterface#
+		 * @name beforeStartDragging
+		 * @param e the event
+		 */
 		obj.prototype.beforeStartDragging = obj.prototype.beforeStartDragging || function(e) {};
 
+		/**
+		 * Enable dragging.
+		 * @methodOf DraggableInterface#
+		 * @name startDrag
+		 * @param {Object} param the parameters passed to the draggable engine
+		 */
 		obj.prototype.startDrag = obj.prototype.startDrag || function(param) {
 			var _self = this;
 			this.setStyle('position', 'absolute');
 			this.access().draggable({
 				drag: function(e) {
 					_self.isDragging = true;
+					_self.onDrag(e);
+				},
+				start: function(e) {
+					_self.onDragStart(e);
 				},
 				beforeStart: function(e) {
 					_self.beforeStartDragging(e);
@@ -16571,6 +17103,11 @@ DraggableInterface = InterfaceImplementor.extend({
 			this.access().draggable(param || "enable");
 		};
 		
+		/**
+		 * Disable dragging.
+		 * @methodOf DraggableInterface#
+		 * @name stopDrag
+		 */
 		obj.prototype.stopDrag = obj.prototype.stopDrag || function(){
 			this.access().draggable("disable");
 		};
@@ -16584,10 +17121,21 @@ DraggableWrapper = {
 	}
 };
 
+/**
+ * @class An interface which allows UI Component to be droppable
+ * by another draggable component.
+ * @interface
+ */
 DroppableInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj) {
-		
+
+		/**
+		 * Make the component droppable.
+		 * @methodOf DroppableInterface#
+		 * @name droppable
+		 * @param {Object} param the parameters passed to the droppable engine
+		 */
 		obj.prototype.droppable = obj.prototype.droppable || function(param) {
 			this.access().droppable(param);
 			this.setLayout('absolute');
@@ -16967,6 +17515,7 @@ ResizableInterface = InterfaceImplementor.extend({
 			var _self = this;
 			
 			$(document).bind("mouseup",function(){
+				_self.dispatchEvent('resizeStop');
 				_self.changeTransformOrigin('center');
 				_self.onMouseUpHandler();
 				_self.resizeset.unregisterEvent();
@@ -17023,6 +17572,7 @@ ResizableInterface = InterfaceImplementor.extend({
 				});
 			}
 			this.resizeset.registerEvent();
+			this.dispatchEvent('resizeStart');
 
 			for(var i=0; i<this.resizeset.getButtons().length; i++) {
 				this.addChild(this.resizeset.getButtons()[i]);
@@ -17301,8 +17851,20 @@ MaskableInterface = InterfaceImplementor.extend({
 		};
 	}
 });
-JOOText = UIComponent.extend({	
-	
+/**
+ * @class An editable textbox. This component allows user to change the text
+ * by doubleclicking it, and when it losts user's focus, it also lost
+ * the editing capabilities.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>readonly</code> Whether the component is readonly</li>
+ * 	<li><code>blurEvent</code> The event when the component losts editing capabilities</li>
+ * </ul>
+ * @augments UIComponent
+ */
+JOOText = UIComponent.extend(
+/** @lends JOOText# */
+{	
 	setupDomObject: function(config) {
 		this._super(config);
 		this.text = new Sketch();
@@ -17338,11 +17900,19 @@ JOOText = UIComponent.extend({
 //			_self.getContextMenu().hide();
 //		}}));
 	},
-	
+
+	/**
+	 * Get the value of the text
+	 * @returns {String} the text value
+	 */
 	getValue: function() {
 		return this.config.lbl;
 	},
-	
+
+	/**
+	 * Enable/Disable editing
+	 * @param {Boolean} b Whether the editing is enable
+	 */
 	enableEdit: function(b) {
 		if (b)
 			this.text.access().focus();
@@ -17350,8 +17920,18 @@ JOOText = UIComponent.extend({
 	}
 });
 
-JOOVideo = UIComponent.extend({
-	
+/**
+ * @class A simple video player, counterpart of <code>HTML5 VIDEO</code>
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>src</code> The source of the video</li>
+ * 	<li><code>controls</code> Whether the controls are visible</li>
+ * </ul> 
+ * @augments UIComponent 
+ */
+JOOVideo = UIComponent.extend(
+/** @lends JOOVideo# */		
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		if (config.controls) {
@@ -17361,16 +17941,28 @@ JOOVideo = UIComponent.extend({
 			this.setAttribute('src', config.src);
 		}
 	},
-	
+
+	/**
+	 * Play the video
+	 */
 	play: function() {
 		this.access()[0].play();
 	},
 	
 	toHtml: function() {
 		return "<video></video>";
+	},
+	
+	dispose: function(){
+		this.access()[0].pause();
+		this._super();
 	}
 });
 
+/**
+ * @class A simple audio player, extending the {@link JOOVideo}.
+ * @augments JOOVideo
+ */
 JOOAudio = JOOVideo.extend({
 	
 	toHtml: function() {
@@ -17378,15 +17970,43 @@ JOOAudio = JOOVideo.extend({
 	}
 });
 
-JOOLink = Graphic.extend({
+/**
+ * @class A counterpart of <code>HTML A</code> element.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>href</code> The URL the link goes to</li>
+ * 	<li><code>lbl</code> The label of the link</li>
+ * </ul>
+ * @augments UIComponent
+ */
+JOOLink = UIComponent.extend({
+	
+	setupDomObject: function(config) {
+		this._super(config);
+		if (config.href)
+			this.setAttribute('href', config.href);
+		if (config.lbl)
+			this.access().html(config.lbl);
+	},
 	
 	toHtml: function() {
 		return "<a></a>";
 	}
 });
 
-JOOImage = UIComponent.extend	({
-	
+/**
+ * @class A counterpart of <code>HTML IMG</code> element.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>defaultSrc</code> The default source of the image, 
+ * 	if the provided source is broken</li>
+ * 	<li><code>src</code> The source of the image</li>
+ * </ul>
+ * @augments UIComponent
+ */
+JOOImage = UIComponent.extend(
+/** @lends JOOImage# */
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		this.defaultSrc = config.defaultSrc || "static/images/image-default.png";
@@ -17400,54 +18020,104 @@ JOOImage = UIComponent.extend	({
 	toHtml: function()	{
 		return "<img />";
 	},
-	
+
+	/**
+	 * Get the source of the image
+	 * @returns {String} the image source
+	 */
 	getSrc: function()	{
 		return this.getAttribute('src');
 	},
-	
+
+	/**
+	 * Change the source of the image
+	 * @param {String} src the new image source
+	 */
 	setSrc: function(src) {
 		this.setAttribute('src', src);
 	}
 });
 
-JOOInput = UIComponent.extend({
-	
+/**
+ * @class A base class for all components which accept user input
+ * by any means.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>value</code> The value of the input</li>
+ * 	<li><code>name</code> The name of the input</li>
+ * </ul>
+ * @augments UIComponent
+ */
+JOOInput = UIComponent.extend(
+/** @lends JOOInput# */		
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		this.access().val(config.value);
 		this.setAttribute('name', config.name);
 	},
-	
+
+	/**
+	 * Change the value of the input
+	 * @param {Object} value new value
+	 */
 	setValue: function(value) {
 		this.access().val(value);
 	},
 	
+	/**
+	 * Get the value of the input
+	 * @returns {Object} the input value
+	 */
 	getValue: function()	{
 		return this.access().val();
 	},
 	
+	/**
+	 * Get the name of the input
+	 * @returns {String} the input name
+	 */
 	getName: function() {
 		return this.getAttribute('name');
 	},
 	
+	/**
+	 * Focus the input
+	 */
 	focus: function()	{
 		this.access().focus();
 	}
 });
 
-JOOTextArea = JOOInput.extend	({
+/**
+ * @class An input which provides an area
+ * for user to enter text. It is the counterpart
+ * of <code>HTML TEXTAREA</code> element.
+ */
+JOOTextArea = JOOInput.extend	(
+/** @lends JOOTextArea# */		
+{
 	
 	toHtml: function()	{
 		return "<textarea></textarea>";
 	},
-	
+
+	/**
+	 * Alias of <code>getValue</code>
+	 * @returns {String} the value of the textarea
+	 */
 	getText: function()	{
 		return this.access().val();
 	}
 });
 
-JOOLabel = UIComponent.extend	({
-	
+/**
+ * @class A counterpart of <code>HTML LABEL</code> element.
+ * @augments UIComponent
+ */
+JOOLabel = UIComponent.extend	(
+/** @lends JOOLabel# */		
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		this.access().html(config.lbl);
@@ -17456,16 +18126,28 @@ JOOLabel = UIComponent.extend	({
 	toHtml: function()	{
 		return "<label></label>";
 	},
-		
+	
+	/**
+	 * Get the text of the label
+	 * @returns {String} the label's text
+	 */
 	getText: function()	{
 		return this.access().html();
 	},
 	
+	/**
+	 * Change the text of the label
+	 * @param {String} txt the new text
+	 */
 	setText: function(txt)	{
 		this.access().html(txt);
 	}
 });
 
+/**
+ * @class A counterpart of <code>HTML INPUT TEXT</code>
+ * @augments JOOInput
+ */
 JOOTextInput = JOOInput.extend({
 	
 	toHtml: function()	{
@@ -17473,6 +18155,10 @@ JOOTextInput = JOOInput.extend({
 	}
 });
 
+/**
+ * @class A counterpart of <code>HTML INPUT PASSWORD</code>
+ * @augments JOOInput
+ */
 JOOPasswordInput = JOOInput.extend({
 	
 	toHtml: function()	{
@@ -17480,8 +18166,18 @@ JOOPasswordInput = JOOInput.extend({
 	}
 });
 
-JOOInputBox = JOOInput.extend({
-	
+/**
+ * @class An input associated with a label.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>labelObject</code> the label object, if not specified a new label will be created using the same configuration parameters as this object</li>
+ * 	<li><code>inputObject</code> the input object, if not specified a new text input will be created using the same configuration parameters as this object</li>
+ * </ul>
+ * @augments JOOInput
+ */
+JOOInputBox = JOOInput.extend(
+/** @lends JOOInput# */		
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		this.label = config.labelObject || new JOOLabel(config);
@@ -17490,14 +18186,34 @@ JOOInputBox = JOOInput.extend({
 		this.addChild(this.input);
 	},
 	
+	/**
+	 * Get the value of the input
+	 * @returns {Object} the input value
+	 */
 	getValue: function()	{
 		return this.input.getValue();
 	},
 	
+	/**
+	 * Change the value of the input
+	 * @param value {Object} the new input value
+	 */
+	setValue: function(value) {
+		this.input.setValue(value);
+	},
+	
+	/**
+	 * Get the text of the label 
+	 * @returns {String} the label's text
+	 */
 	getLabel: function() {
 		return this.label.getValue();
 	},
 	
+	/**
+	 * Get the name of the input
+	 * @returns the input's name
+	 */
 	getName: function() {
 		return this.input.getName();
 	},
@@ -17507,6 +18223,31 @@ JOOInputBox = JOOInput.extend({
 	}
 });
 
+JOOSelectOption = Graphic.extend({
+	
+	setupDomObject: function(config) {
+		this._super(config);
+		this.repaint(config.label);
+		this.setAttribute("value", config.value);
+	},
+	
+	toHtml: function() {
+		return "<option></option>";
+	}
+});
+
+/**
+ * @class A counterpart of <code>HTML SELECT</code> element.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>options</code> Initial options of this select box. It must be an <code>Array</code>
+ * 		which each element is an object with <code>label</code> and <code>value</code> properties.
+ * 	</li>
+ * 	<li><code>selectedIndex</code> The initially selected index, defaults is 0</li>
+ * 	<li><code>selectedValue</code> The initially selected value. Should not present if <code>selectedIndex</code> is already specified.</li>
+ * </ul>
+ * @augments JOOInput
+ */
 JOOInputSelect = JOOInput.extend({
 	
 	setupDomObject: function(config) {
@@ -17535,6 +18276,10 @@ JOOInputSelect = JOOInput.extend({
 		this.access().val(config.selectedValue);
 	},
 	
+	/**
+	 * Add an option to the select box.
+	 * @param {Object} param new option, with <code>label</code> and <code>value</code> properties.
+	 */
 	addOption: function(param){
 		this.options.push(param);
 		if (param.order != undefined){
@@ -17542,27 +18287,43 @@ JOOInputSelect = JOOInput.extend({
 				this.options[i] = this.options[i+1];
 			}
 		}
-		this.access().append("<option value='"+param.value+"'>"+param.label+"</option>");
+		this.addChild(new JOOSelectOption(param));
 	},
 	
+	/**
+	 * Change the value of the select box
+	 * @param {String} val new value of the select box.
+	 */
 	setValue: function(val) {
 		this.access().val(val);
 		this.selectedIndex = this.access().find("option:selected").index()-1;
 		this.dispatchEvent("change");
 	},
-	
+
+	/**
+	 * Change the value of the select box to an option by its index.
+	 * @param {Number} idx the index of the option.
+	 */
 	setValueByIndex: function(idx) {
 		this.selectedIndex = idx;
 		this.access().find("option").eq(idx).attr("selected", "selected");
 		this.dispatchEvent("change");
 	},
-	
+
+	/**
+	 * Get the value of the select box.
+	 * @returns {String} the select box's value.
+	 */
 	getValue: function() {
 		return this.access().val();
 	},
 	
+	/**
+	 * Refresh the select box.
+	 */
 	refresh: function(){
 		this.access().html(this.toHtml());
+		this.selectedIndex = this.access().find("option:selected").index()-1;
 	},
 	
 	toHtml: function(){
@@ -17570,7 +18331,17 @@ JOOInputSelect = JOOInput.extend({
 	}
 });
 
-JOOButton = UIComponent.extend({
+/**
+ * @class A counterpart of <code>HTML BUTTON</code> element.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>lbl</code> The label of the button.</li>
+ * </ul>
+ * @augments UIComponent
+ */
+JOOButton = UIComponent.extend(
+/** @lends JOOButton# */		
+{
 	
 	setupDomObject: function(config) {
 		this._super(config);
@@ -17586,9 +18357,18 @@ JOOButton = UIComponent.extend({
 		return "<a></a>";
 	},
 	
+	/**
+	 * Command attached to the button.
+	 * @param e the event object
+	 */
 	onclick: function(e) {}
 });
 
+/**
+ * @class A customized button, which excludes all styles
+ * of its superclass and ancestors.
+ * @augments JOOButton
+ */
 JOOCustomButton = JOOButton.extend({
 	
 	setupDomObject: function(config) {
@@ -17597,8 +18377,17 @@ JOOCustomButton = JOOButton.extend({
 	}
 });
 
-JOOToggleButton = JOOCustomButton.extend({
-	
+/**
+ * @class A button which can toggle up and down.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>state</code> The initial state of the button</p>
+ * </ul>
+ * @augments JOOCustomButton
+ */
+JOOToggleButton = JOOCustomButton.extend(
+/** @lends 	JOOToggleButton# */
+{
 	setupBase: function(config) {
 		this.state = config.state;
 		this._super(config);
@@ -17607,9 +18396,13 @@ JOOToggleButton = JOOCustomButton.extend({
 	setupDomObject: function(config) {
 		this._super(config);
 		if (this.state)
-			this.addClass('joo-toggle-down');
+			this.access().addClass('joo-toggle-down');
 	},
-	
+
+	/**
+	 * Change the state of the button.
+	 * @param {Boolean} state the state of the button 
+	 */
 	setState: function(state) {
 		this.state = state;
 		if(this.state) {
@@ -17621,6 +18414,10 @@ JOOToggleButton = JOOCustomButton.extend({
 		}
 	},
 	
+	/**
+	 * Get the state of the button.
+	 * @returns {Boolean} the state of the button
+	 */
 	getState: function() {
 		return this.state;
 	},
@@ -17646,8 +18443,13 @@ JOOToggleButton = JOOCustomButton.extend({
 	}
 });
 
-JOOCheckbox = JOOToggleButton.extend({
-	
+/**
+ * @class An equivalent but different from <code>HTML INPUT CHECKBOX</code> element.
+ * @augments JOOToggleButton
+ */
+JOOCheckbox = JOOToggleButton.extend(
+/** @lends JOOCheckbox# */
+{
 	ontoggledown: function() {
 		this.value = true;
 		this.access().addClass('checked');
@@ -17659,11 +18461,20 @@ JOOCheckbox = JOOToggleButton.extend({
 		this.access().removeClass('checked');
 		this.dispatchEvent('change');
 	},
-	
+
+	/**
+	 * Get the value of the checkbox.
+	 * @returns {Boolean} the value. <code>true</code> if the checkbox is checked,
+	 * <code>false</code> otherwise.
+	 */
 	getValue: function() {
 		return this.value;
 	},
 	
+	/**
+	 * Change the value of the checkbox.
+	 * @param {Boolean} value the value of the checkbox
+	 */
 	setValue: function(value) {
 		if (value)
 			this.ontoggledown();
@@ -17688,8 +18499,25 @@ JOOCloseButton = JOOCustomButton.extend({
 	}
 });
 
-JOOSprite = UIComponent.extend({
-	
+/**
+ * @class A sprite is a keyframe-based animation object which has a timeline. This is
+ * base class of all animation classes.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>src</code> the background image source, should be a sprite image</li>
+ * 	<li><code>framerate</code> the framerate of the sprite</li>
+ * 	<li><code>loop</code> whether the animation should loop</li>
+ * 	<li><code>horizontalFramesNo</code> the number of frames in horizontal dimension</li>
+ * 	<li><code>verticalFramesNo</code> the number of frames in vertical dimension</li>
+ * 	<li><code>spriteWidth</code> the width of the viewport of sprite</li>
+ * 	<li><code>spriteHeight</code> the height of the viewport of sprite</li>
+ * 	<li><code>speed</code> the relative speed of sprite, e.g 1.5, 2, etc</li>
+ * </ul>
+ * @augments UIComponent
+ */
+JOOSprite = UIComponent.extend(
+/** @lends JOOSprite# */
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		this.src = config.src;
@@ -17703,7 +18531,12 @@ JOOSprite = UIComponent.extend({
 		this.speed = config.speed || 1;
 		this.stopped = false;
 	},
-	
+
+	/**
+	 * Play the sprite from <code>start</code> frame to <code>end</code> frame.
+	 * @param {Number} start the start frame
+	 * @param {Number} end the end frame
+	 */
 	play: function(start, end) {
 		this.stopped = false;
 		this.dispatchEvent("frameStart");
@@ -17732,23 +18565,36 @@ JOOSprite = UIComponent.extend({
 			}, parseFloat(1000/framerate));
 		}
 	},
-	
+
+	/**
+	 * Change the relative speed of the sprite.
+	 * @param speed the relative speed of the sprite
+	 */
 	setSpeed: function(speed) {
 		var tempFramerate = this.framerate * speed;
 		clearInterval(this.interval);
 		this._playWithFramerate(tempFramerate);
 	},
 	
+	/**
+	 * Pause the sprite.
+	 */
 	pause: function() {
 		this.dispatchEvent("framePause");
 		clearInterval(this.interval);
 	},
 	
+	/**
+	 * Resume the sprite.
+	 */
 	resume: function() {
 		this.dispatchEvent("frameResume");
 		this._playWithFramerate(this.interval);
 	},
 	
+	/**
+	 * Stop the sprite.
+	 */
 	stop: function() {
 		this.dispatchEvent("frameStop");
 		this.stopped = true;
@@ -17775,6 +18621,12 @@ JOOSprite = UIComponent.extend({
 		this.currentFrame++;
 	},
 	
+	/**
+	 * This method defines how animation works. Subclass can override it to
+	 * change the behaviour. This implementation just change the 
+	 * <code>background-position</code> of the sprite.
+	 * @param frame
+	 */
 	onFrame: function(frame) {
 		var x = frame % this.horizontalFramesNo;
 		var y = 0;
@@ -17795,6 +18647,10 @@ JOOSprite = UIComponent.extend({
 	}
 });
 
+/**
+ * @class A counterpart of <code>HTML INPUT FILE</code> element.
+ * @augments JOOInput
+ */
 JOOFileInput = JOOInput.extend({
 	
 	setupDomObject: function(config) {
@@ -17806,6 +18662,15 @@ JOOFileInput = JOOInput.extend({
 	}
 });
 
+/**
+ * @class A basic AJAX-style uploader.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>name</code> the name of the uploader</li>
+ * 	<li><code>endpoint</code> the URL to which the uploader is connected</li>
+ * </ul>
+ * @augments UIComponent
+ */
 JOOBasicUploader = UIComponent.extend({
 	
 	setupDomObject: function(config) {
@@ -17836,6 +18701,14 @@ JOOBasicUploader = UIComponent.extend({
 	}
 });
 
+/**
+ * @class A customized uploader, which features an overlay control.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>control</code> the control of the uploader</li>
+ * </ul>
+ * @augments JOOBasicUploader
+ */
 JOOAdvancedUploader = JOOBasicUploader.extend({
 	
 	setupDomObject: function(config) {
@@ -17852,6 +18725,10 @@ JOOAdvancedUploader = JOOBasicUploader.extend({
 	}
 });
 
+/**
+ * @class A <code>bold</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleBoldButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17859,6 +18736,10 @@ JOOToggleBoldButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>italic</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleItalicButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17866,6 +18747,10 @@ JOOToggleItalicButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>underline</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleUnderlineButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17873,6 +18758,10 @@ JOOToggleUnderlineButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>horizontal flip</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleFlipHorizontalButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17880,6 +18769,10 @@ JOOToggleFlipHorizontalButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>vertical flip</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleFlipVerticalButton = JOOToggleButton.extend({
 	
 	toHtml: function() {
@@ -17887,6 +18780,10 @@ JOOToggleFlipVerticalButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>left align</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleAlignLeftButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17894,6 +18791,10 @@ JOOToggleAlignLeftButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>centered align</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleAlignCenterButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17901,6 +18802,10 @@ JOOToggleAlignCenterButton = JOOToggleButton.extend({
 	}
 });
 
+/**
+ * @class A <code>right align</code> toggle button, used in editors.
+ * @augments JOOToggleButton
+ */
 JOOToggleAlignRightButton = JOOToggleButton.extend({
 	
 	toHtml: function(){
@@ -17908,7 +18813,13 @@ JOOToggleAlignRightButton = JOOToggleButton.extend({
 	}
 });
 
-JOOTabbedPane = Panel.extend({
+/**
+ * @class A panel which holds multiple tabs.
+ * @augments Panel
+ */
+JOOTabbedPane = Panel.extend(
+/** @lends JOOTabbedPane# */
+{
 	
 	setupBase: function(config) {
 		this.tabs = Array();
@@ -17922,9 +18833,18 @@ JOOTabbedPane = Panel.extend({
 		this.addChild(this.header);
 		this.addChild(this.content);
 	},
-	
+
+	/**
+	 * Add a tab to this panel.
+	 * @param {String} title the title of the tab
+	 * @param {DisplayObject} comp the tab component
+	 * @param {String} icon an icon associated with the tab
+	 * @param {String} tooltip a tooltip associated with the tab
+	 */
 	addTab: function(title, comp, icon, tooltip) {
 		comp.access().addClass('joo-tab-item');
+		if (!tooltip)
+			tooltip = "";
 		var header = new CustomDisplayObject({html: "<span title='"+tooltip+"'></span>"});
 		if (icon != undefined)
 			header.addChild(new JOOImage({src: icon, passClickEvent: true}));
@@ -17945,6 +18865,10 @@ JOOTabbedPane = Panel.extend({
 		}
 	},
 	
+	/**
+	 * Change the active tab.
+	 * @param {Number} index the index of the tab to be active
+	 */
 	setTab: function(index) {
 		for(var i=0; i<this.header.children.length; i++) {
 			this.header.children[i].access().removeClass('active');
@@ -17961,8 +18885,13 @@ JOOTabbedPane = Panel.extend({
 	}
 });
 
-JOOAccordion = UIComponent.extend({
-	
+/**
+ * @class An accordion, which has a header to toggle its content.
+ * @augments UIComponent
+ */
+JOOAccordion = UIComponent.extend(
+/** @lends JOOAccordion# */
+{
 	setupDomObject: function(config) {
 		this._super(config);
 		this.header = new Sketch();
@@ -17978,36 +18907,107 @@ JOOAccordion = UIComponent.extend({
 		this.addChild(this.contentPane);
 	},
 	
+	/**
+	 * Get the content panel of the accordion.
+	 * @returns {Sketch} the content panel
+	 */
 	getContentPane: function() {
 		return this.contentPane;
 	},
 	
+	/**
+	 * Change the label of the accordion.
+	 * @param {String} label the label of the accordion
+	 */
 	setAccordionLabel: function(label) {
 		this.header.access().html(label);
 	}
 });
 
-JOORuler = JOOInput.extend({
-	
+/**
+ * @class A ruler which supports drag.
+ * <p>It supports additional configuration parameters:</p>
+ * <ul>
+ * 	<li><code>width</code> the width of the ruler</li>
+ * 	<li><code>height</code> the height of the ruler</li>
+ * 	<li><code>initmin</code> the minimum value of the ruler</li>
+ * 	<li><code>initmax</code> the maximum value of the ruler</li>
+ * 	<li><code>interval</code> the interval number of the ruler</li>
+ * 	<li><code>groupmode</code> could be "half" or "quarter"</li>
+ * 	<li><code>value</code> the intial value of the ruler</li>
+ * </ul>
+ * @augments JOOInput
+ */
+JOORuler = JOOInput.extend(
+/** @lends JOORuler# */
+{
 	setupDomObject: function(config) {
 		this._super(config);
-		this.width = config.width;
-		this.height = config.height;
-		this.initMin = config.initMin || 0;
-		this.initMax = config.initMax || this.width / 10;
-		this.interval = config.interval || 1;
-		this.groupMode = config.groupMode;
-		this.value = config.value || this.initMin;
+		this.width = parseFloat(config.width);
+		this.height = parseFloat(config.height);
+		this.initMin = parseFloat(config.initmin || 0);
+		this.min = parseFloat(config.min || 0);
+		this.initMax = parseFloat(config.initmax || this.width / 10);
+		this.max = parseFloat(config.max || this.initMax);
+		this.interval = parseFloat(config.interval || 1);
+		this.groupMode = config.groupmode;
+		this.value = parseFloat(config.value || this.initmin);
+		this.autoExpand = this.autoExpand || true;
+		this.baseValue = 0;
 		
 		this.canvas = new Canvas({width: this.width, height: this.height});
 		this.addChild(this.canvas);
 		this.addEventListener('stageUpdated', function() {
 			this.initRuler();
+			this.initRoller();
 		});
+	},
+	
+	initRoller: function() {
+		this.backRoller = new JOOImage({absolute: true, height: 16, 
+			custom: {
+				position: 'absolute',
+				left: '-10px'
+			},
+			src: 'static/images/backward.png'
+		});
+		this.forwardRoller = new JOOImage({absolute: true, height: 16, 
+			custom: {
+				position: 'absolute',
+				right: '-10px'
+			},
+			src: 'static/images/forward.png'
+		});
+		
+		var _self = this;
+		this.backRoller.addEventListener('mousedown', function() {
+			_self.startExpand();
+		});
+		this.backRoller.addEventListener('mouseup', function() {
+			_self.stopExpand();
+		});
+		this.backRoller.addEventListener('mouseout', function() {
+			_self.stopExpand();
+		});
+		
+		this.forwardRoller.addEventListener('mousedown', function() {
+			_self.startExpand(true);
+		});
+		this.forwardRoller.addEventListener('mouseup', function() {
+			_self.stopExpand();
+		});
+		this.forwardRoller.addEventListener('mouseout', function() {
+			_self.stopExpand();
+		});
+		
+		this.addChild(this.backRoller);
+		this.addChild(this.forwardRoller);
 	},
 	
 	initRuler: function() {
 		var context = this.canvas.getContext();
+		context.beginPath();
+		context.clearRect(0, 0, parseInt(this.canvas.getWidth()), parseInt(this.canvas.getHeight()));
 		var len = this.initMax - this.initMin;
 		
 		if (this.groupMode == "quarter") 
@@ -18027,23 +19027,26 @@ JOORuler = JOOInput.extend({
 		var valueX = this.convertValueToX(this.deltaX);
 		this.drawPointer(valueX, 0, this.deltaX, this.deltaY);
 		
-		for(var i=0; i<=len; i += this.interval) {
+		var base = this.baseValue % this.group;
+		var min = this.initMin - base;
+		var max = this.initMax - base;
+		for(var i=-base; i<=len; i += this.interval) {
 			var x = i * (this.getWidth() - 2 * this.deltaX) / len + this.deltaX;
 			context.moveTo(x, this.getHeight()/10 + this.deltaY);
 			var h = this.height / 2;
 			
-			if (i == 0 || i == this.initMax - this.initMin || i % this.group == 0) {
-				if (i == this.initMax)
+			if (i == -base || i == max - min || (i + base) % this.group == 0) {
+				if (i == max - min)
 					context.setTextAlign('right');
-				else if (i == this.initMin)
+				else if (i == 0)
 					context.setTextAlign('left');
 				else
 					context.setTextAlign('center');
-				context.fillText(i + this.initMin, x, this.height / 2 + 15 + this.deltaY);
+				context.fillText(i + base + min, x, this.height / 2 + 15 + this.deltaY);
 			}
-			if (i % this.group == 0) {
+			if ((i + base) % this.group == 0) {
 				
-			} else if ((i / this.interval) % (this.group / this.interval) == 2) {
+			} else if (((i + base) / this.interval) % (this.group / this.interval) == 2) {
 				h = h * 0.75;
 			} else {
 				h = h * 0.5;
@@ -18053,6 +19056,10 @@ JOORuler = JOOInput.extend({
 		context.stroke();
 	},
 	
+	/**
+	 * Mark the ruler at a specific value.
+	 * @param {Number} value the value to be marked
+	 */
 	mark: function(value) {
 		var _self = this;
 		var x = this.convertValueToX(this.deltaX, value);
@@ -18080,66 +19087,93 @@ JOORuler = JOOInput.extend({
     	return Math.round(this.initMin + percent * (this.initMax - this.initMin));
 	},
 	
+	expandLeft: function() {
+		if (this.initMin > this.min) {
+			this.baseValue--;
+			this.initMin--;
+			this.initMax--;
+			this.initRuler();
+			this.dispatchEvent('expanded');
+		}
+	},
+	
+	expandRight: function() {
+		if (this.initMax < this.max) {
+			this.baseValue++;
+			this.initMin++;
+			this.initMax++;
+			this.initRuler();
+			this.dispatchEvent('expanded');
+		}
+	},
+	
+	expand: function(inc, isRight) {
+		if (isRight) {
+			this.expandRight();
+		} else {
+			this.expandLeft();
+		}
+	},
+	
+	startExpand: function(isRight) {
+		var _self = this;
+		this.expandInterval = setInterval(function() {
+			_self.expand(undefined, isRight);
+			_self.setValue(_self.getValue());
+		}, 25);
+	},
+	
+	stopExpand: function(isRight) {
+		clearInterval(this.expandInterval);
+	},
+	
+	startTracking: function() {
+		var _self = this;
+		this.trackingInterval = setInterval(function() {
+			var inc = _self.pointer.getX() - (_self.getWidth() - 2 * _self.deltaX);
+			var v = _self.convertXToValue(_self.pointer.getX(), _self.deltaX);
+	    	if (v >= _self.initMax-1) {
+	    		if (_self.autoExpand) {
+	    			_self.expand(Math.round(inc / 2), true);
+	    		}
+	    	} else if (v <= _self.initMin) {
+	    		if (_self.autoExpand) {
+	    			_self.expand(Math.round(inc / 2));
+	    		}
+	    	}
+		}, 25);
+	},
+	
+	stopTracking: function() {
+		clearInterval(this.trackingInterval);
+		this.trackingInterval = undefined;
+	},
+	
 	drawPointer: function(x, y, deltaX, deltaY) {
-//        var stage = new Kinetic.Stage(this.getId(), this.getWidth(), this.getHeight());
-//        var layer = new Kinetic.Layer();
+		if (this.pointer) return;
         var _self = this;
 
-//        var img = new Kinetic.Shape(function(){
-//        	var context = this.getContext();
-//        	// draw invisible detectable path for image
-//        	context.beginPath();
-//        	context.fillStyle = "rgb(255, 255, 255)";
-//            context.rect(0, 0, deltaX * 2, deltaY * 2);
-//            context.fill();
-//            
-//        	context.setLineWidth(1);
-//            context.moveTo(deltaX, deltaY * 2);
-//    		context.lineTo(deltaX, deltaY * 2 + _self.height);
-//    		context.stroke();
-//        });
-        
         var img = new UIComponent({width: deltaX*2, height: deltaY*2});
         img.access().addClass('joo-ruler-pointer');
         img.setLocation(x, y);
+        img.addEventListener('dragstart', function() {
+        	_self.startTracking();
+        });
         img.addEventListener('drag', function(e) {
-        	_self.convertXToValue(this.getX(), deltaX);
         	_self.dispatchEvent('pointerdrag',{"position":this.getX()});
         });
         img.addEventListener('dragstop', function(e) {
         	hidetip();
+        	_self.stopTracking();
         	_self.setValue(_self.convertXToValue(this.getX(), deltaX));
         });
-        
-//        img.x = x;
-//        img.y = y;
- 
-        // enable drag and drop
-//        img.draggableX(true);
         
         Wrapper.wrap(img, DraggableInterface);
         img.draggable({axis: 'x', containment: 'parent'});
         img.startDrag();
  
-        // add cursor styling
-//        img.on("mouseover", function(){
-//            document.body.style.cursor = "pointer";
-//        });
-//        img.on("mouseout", function(){
-//            document.body.style.cursor = "default";
-//        });
-//        img.on("dragmove", function(e) {
-//        	showtip(_self.convertXToValue(img.x, deltaX));
-//        });
-//        img.on("dragend", function() {
-//        	hidetip();
-//        	_self.setValue(_self.convertXToValue(img.x, deltaX));
-//        });
-
         this.pointer = img;
         
-//        layer.add(img);
-//        stage.add(layer);
         this.addChild(img);
 	},
 	
@@ -18147,16 +19181,28 @@ JOORuler = JOOInput.extend({
 		return this.value;
 	},
 	
+	/**
+	 * Change the value of the ruler. It also updates the ruler pointer's position.
+	 * @param {Number} value the new value of the ruler
+	 */
 	setValue: function(value) {
-		if (value < this.initMin)
-			value = this.initMin;
-		else if (value > this.initMax)
-			value = this.initMax;
+		var oldValue = this.value;
+		if (value < this.min)
+			value = this.min;
+		else if (value > this.max)
+			value = this.max;
 		this.value = value;
-		if (this.pointer != undefined) {
-			this.pointer.setX(this.convertValueToX(5));
+		if (this.pointer) {
+			if (value < this.initMin || value > this.initMax) {
+				this.pointer.access().hide();
+			} else {
+				this.pointer.access().show();
+				this.pointer.setX(this.convertValueToX(5));
+			}
 		}
-		this.dispatchEvent('change');
+		if (this.value != oldValue) {
+			this.dispatchEvent('change');
+		}
 	}
 });
 
@@ -18214,8 +19260,17 @@ JOOToggleBar = Sketch.extend({
 	}
 });
 
-JOOList = UIComponent.extend({
-	
+/**
+ * @class A component holding another components in a list view.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>readonly</code> Whether each item in the list is readonly</li>
+ * </ul>
+ * @augments UIComponent 
+ */
+JOOList = UIComponent.extend(
+/** @lends	JOOList# */
+{
 	setupBase: function(config) {
 		this.items = Array();
 		this.readonly = config.readonly;
@@ -18223,6 +19278,12 @@ JOOList = UIComponent.extend({
 		this._super(config);
 	},
 	
+	/**
+	 * Add an item to the list.
+	 * @param {Object} obj the item to be added, must be an object with 
+	 * <code>label</code> and <code>value</code> properties
+	 * @returns {JOOText} the newly added item
+	 */
 	addItem: function(obj) {
 		var item = new Sketch();
 		var text = new JOOText({lbl: obj.label, readonly: this.readonly, blurEvent: 'itemDeselected'});
@@ -18240,14 +19301,26 @@ JOOList = UIComponent.extend({
 		return item;
 	},
 	
+	/**
+	 * Get the current selected item.
+	 * @returns {JOOText} the current selected item
+	 */
 	getSelectedItem: function() {
 		return this.selectedItem;
 	},
 	
+	/**
+	 * Get the index of current selected item.
+	 * @returns {Number} the index
+	 */
 	getSelectedIndex: function() {
 		return this.indexOf(this.selectedItem);
 	},
 	
+	/**
+	 * Programmatically select an item.
+	 * @param {JOOText} item the item to be selected
+	 */
 	selectItem: function(item) {
 		if (item == this.selectedItem) return;
 		if (this.selectedItem) {
@@ -18255,7 +19328,9 @@ JOOList = UIComponent.extend({
 			this.selectedItem.text.dispatchEvent('itemDeselected');
 		}
 		this.selectedItem = item;
-		this.selectedItem.access().addClass('selected');
+		if(item){
+			this.selectedItem.access().addClass('selected');
+		}
 		this.dispatchEvent('change');
 	},
 	
@@ -18264,8 +19339,19 @@ JOOList = UIComponent.extend({
 		this.setLayout('vertical');
 	},
 });
-JOODialog = UIComponent.extend({
-	
+
+/**
+ * @class A desktop-style dialog. It has a title bar and a content pane.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>title</code> The title of the dialog</li>
+ * </ul>
+ * @augments UIComponent
+ * @implements DraggableInterface
+ */
+JOODialog = UIComponent.extend(
+/** @lends JOODialog# */
+{
 	setupDomObject: function(config) {
 		this._super(config);
 
@@ -18289,19 +19375,6 @@ JOODialog = UIComponent.extend({
 		if (config.title != undefined)
 			this.setTitle(config.title);
 		
-		/**
-		this.addEventListener('mousedown', function() {
-			if (this.dragInit == undefined) {
-				this.draggable();
-				this.dragInit = true;
-			} else {
-				this.startDrag();
-			}
-		});
-		this.addEventListener('mouseup', function() {
-			this.stopDrag();
-		});
-		*/
 		this.draggable({handle: this.titleBar.access()});
 		this.startDrag();
 		this.addEventListener('stageUpdated', function() {
@@ -18309,8 +19382,13 @@ JOODialog = UIComponent.extend({
 		});
 	},
 	
+	/**
+	 * Make the dialog centered by the screen.
+	 */
 	center: function() {
-		this.setLocation(($(window).width() - this.access().outerWidth())/2, ($(window).height()-this.access().outerHeight())/2);
+		var w = ($(window).width() - this.access().outerWidth())/2;
+		var h = ($(window).height()-this.access().outerHeight())/2;
+		this.setLocation(w < 0 ? 0 : w, h < 0 ? 0 : h);
 	},
 	
 	afterAdded: function() {
@@ -18324,19 +19402,34 @@ JOODialog = UIComponent.extend({
 		}
 	},
 	
+	/**
+	 * Change the title of the dialog.
+	 * @param title the new title
+	 */
 	setTitle: function(title) {
 		this.config.title = title;
 		this.titleBar.getChildren()[0].setText(title);
 	},
 	
+	/**
+	 * Get the current title of the dialog.
+	 * @returns {String} the current title
+	 */
 	getTitle: function() {
 		return this.titleBar.getChildren()[0].getText();
 	},
 	
+	/**
+	 * Get the content pane of the dialog.
+	 * @returns {Sketch} the content pane
+	 */
 	getContentPane: function() {
 		return this.contentPane;
 	},
 	
+	/**
+	 * Close the dialog.
+	 */
 	close: function() {
 		this.dispatchEvent('closing');
 		if (this.modalSketch != undefined)
@@ -18344,10 +19437,16 @@ JOODialog = UIComponent.extend({
 		this.selfRemove();
 	},
 	
+	/**
+	 * Show the dialog.
+	 */
 	show: function() {
 		this.access().show();
 	},
 	
+	/**
+	 * Hide the dialog.
+	 */
 	hide: function() {
 		this.access().hide();
 	},
@@ -18421,6 +19520,11 @@ AboutApplicationDialog = JOODialog.extend({
 	}
 });
 
+/**
+ * @class A slider icon, used in JOOSlider.
+ * @augments Sketch
+ * @implements DraggableInterface
+ */
 SliderIcon = Sketch.extend({
 	
 	setupBase: function(config) {
@@ -18463,8 +19567,13 @@ SliderIcon = Sketch.extend({
 	}
 }).implement(DraggableInterface);
 
-JOOSlider = JOOInput.extend({
-	
+/**
+ * @class A slider, which has a draggable icon and a slide pane.
+ * @augments JOOInput
+ */
+JOOSlider = JOOInput.extend(
+/** @lends JOOSlider# */
+{
 	setupBase: function(config)	{
 		this._super(config);
 	},
@@ -18507,15 +19616,21 @@ JOOSlider = JOOInput.extend({
 		});
 	},
 	
-	slideTo: function(value, ispos){
+	/**
+	 * SLide the icon to a specific value.
+	 * @param {String|Number} value the value of the slider.
+	 * @param {Boolean} ispos whether the <code>value</code> is position or absolute value.
+	 */
+	slideTo: function(value, ispos) {
+		var oldPos = this.sliderIcon.getX();
+		var posX = undefined;
 		if(ispos){
 			// position, not value anymore
-			var posX = value;
+			posX = value;
 			value = ((parseFloat(posX)) / (this.getWidth() - 18)) * (this.max - this.min) + this.min;
 			if(value < this.min){
 				value = this.min;
 				posX = 9;
-				this.sliderIcon.setX(posX);
 			}
 		} else {
 			if (value < this.min) {
@@ -18524,9 +19639,12 @@ JOOSlider = JOOInput.extend({
 			if (value > this.max) {
 				value = this.max;
 			}
-			var posX = (value - this.min) / (this.max - this.min) * (this.getWidth() - 18);
-			this.sliderIcon.setX(posX);
+			posX = (value - this.min) / (this.max - this.min) * (this.getWidth() - 18);
 		}
+		
+		if (oldPos == posX) 
+			return;
+		this.sliderIcon.setX(posX);
 		
 		var rate = (value - this.min) / (this.max - this.min);
 		var lWidth = rate * (this.getWidth() - 18);
@@ -18537,11 +19655,19 @@ JOOSlider = JOOInput.extend({
 		
 		this.dispatchEvent('change');
 	},
-	
+
+	/**
+	 * Change the value of the slider.
+	 * @param {Number} value the new value
+	 */
 	setValue: function(value) {
 		this.slideTo(value);
 	},
 	
+	/**
+	 * Get the value of the slider.
+	 * @returns {Number} the value of the slider
+	 */
 	getValue: function()	{
 		return this.access().find("input").val();
 	},
@@ -18551,8 +19677,13 @@ JOOSlider = JOOInput.extend({
 	}
 });
 
-JOOColorPicker = JOOInput.extend({
-	
+/**
+ * @class A simple color picker. Wrapper of jQuery ColorPicker.
+ * @augments JOOInput
+ */
+JOOColorPicker = JOOInput.extend(
+/** @lends JOOColorPicker# */
+{
 	setupBase: function(config) {
 		this._super(config);
 	},
@@ -18608,10 +19739,18 @@ JOOColorPicker = JOOInput.extend({
 		this.colorPickerIcon.setStyle("background", config.background);
 	},
 	
+	/**
+	 * Change the value of the picker.
+	 * @param {String} value the new value
+	 */
 	setValue: function(value){
 		this.colorPickerIcon.setStyle("background-color", value);
 	},
 	
+	/**
+	 * Get the value of the picker.
+	 * @returns {String} the picker's value
+	 */
 	getValue: function(){
 		return this.colorPickerIcon.getStyle("background-color");
 	},
@@ -18733,7 +19872,7 @@ JOOMediaValue = JOOInput.extend({
 		this._super(value);
 		if (value == undefined)
 			value = "Unspecified";
-		this.link.repaint(value);
+		this.link.access().html(value);
 		this.dispatchEvent('change');
 	},
 	
@@ -19592,6 +20731,14 @@ JOOAnimationData = Class.extend({
 	}
 });
 
+/**
+ * @class A movie clip is a sprite with custom animation, it also supports script.
+ * <p>It supports additional configuration parameters</p>
+ * <ul>
+ * 	<li><code>data</code> The animation data</li>
+ * </ul>
+ * @augments JOOSprite
+ */
 JOOMovieClip = JOOSprite.extend({
 	
 	setupBase: function(config) {
@@ -19829,31 +20976,23 @@ JOOSpriteAnimation = UIComponent.extend({
 		return "<div></div>";
 	}
 });
-EventBinder = Class.extend	({
-	fireEvent: function(jObject, event)	{
-		jObject.trigger(event);
-	},
-
-	bindEvent: function(jObject, handlers)	{
-		jObject.access().bind(handlers.getEventName(), function(e)	{
-			handlers.onEvent(e, jObject);
-		});
-	}
-});
 /**
- * Observer interface. 
- * Used for formalizing the observer design pattern,
+ * @class Used for formalizing the observer design pattern,
  * especially in an event-based application
- * Provide the following methods:
- *  - notify(eventName, eventData): called when an arbitrary event is triggered
- *  - registerObserver(): register the current object to be an observer
- *  - unregisterObserver(): unregister the current object, and it's no longer an observer
- *  @augments InterfaceImplementor
- *  @author griever
+ * @interface
  */
 ObserverInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj)	{
+		/**
+		 * Called when the observer is notified of an event by the {@link Subject}.
+		 * The default implementation forward the request
+		 * @methodOf ObserverInterface#
+		 * @name notify 
+		 * @param {String} eventName the event name
+		 * @param {Object} eventData the event data
+		 * @returns {Boolean} whether the event is interested by this observer or not.
+		 */
 		obj.prototype.notify = obj.prototype.notify || function(eventName, eventData)	{
 			var methodName = "on"+eventName;
 			if (typeof this[methodName] != 'undefined')	{
@@ -19864,11 +21003,21 @@ ObserverInterface = InterfaceImplementor.extend({
 			return false;
 		};
 		
+		/**
+		 * Register this observer with the {@link Subject}.
+		 * @methodOf ObserverInterface#
+		 * @name registerObserver
+		 */
 		obj.prototype.registerObserver = obj.prototype.registerObserver || function()	{
 			var subject = SingletonFactory.getInstance(Subject);
 			subject.attachObserver(this);
 		};
 		
+		/**
+		 * Unregister this observer with the {@link Subject}.
+		 * @methodOf ObserverInterface#
+		 * @name unregisterObserver
+		 */
 		obj.prototype.unregisterObserver = obj.prototype.unregisterObserver || function()	{
 			var subject = SingletonFactory.getInstance(Subject);
 			subject.detachObserver(this);
@@ -19876,16 +21025,17 @@ ObserverInterface = InterfaceImplementor.extend({
 	}
 });
 
-/**
- * Event Subject (mediator or notifier)
- * @augments Class
- * @author griever
- */
-Subject = Class.extend({
+Subject = Class.extend(
+/** @lends Subject# */	
+{
 	
 	/**
-	 * Initialize fields
-	 * @constructor
+	 * Initialize observers
+	 * @class <code>Subject</code> is the central of Observer pattern. It maintains a list
+	 * of observers, and notifies them automatically of new events. <code>Subject</code> is
+	 * a <code>singleton</code> class.
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function()	{
 		this.observers = Array();
@@ -19893,8 +21043,7 @@ Subject = Class.extend({
 	
 	/**
 	 * Attach an observer
-	 * @function
-	 * @param {observer} the observer
+	 * @param {ObserverInterface} observer the observer to be attached
 	 */
 	attachObserver: function(observer)	{
 		this.observers.push(observer);
@@ -19902,8 +21051,7 @@ Subject = Class.extend({
 	
 	/**
 	 * Detach an observer
-	 * @function
-	 * @param {observer} the observer
+	 * @param {ObserverInterface} observer the observer to be detached
 	 */
 	detachObserver: function(observer)	{
 		if (observer == undefined)
@@ -19916,9 +21064,8 @@ Subject = Class.extend({
 	
 	/**
 	 * Notify an event to all observers
-	 * @function
-	 * @param {eventName} the name of the event which should contains characters only
-	 * @param {eventData} the data associated with the event
+	 * @param {String} eventName the name of the event which should contains characters only
+	 * @param {Object} eventData the data associated with the event
 	 */
 	notifyEvent: function(eventName, eventData)	{
 		var count = 0;
@@ -19976,19 +21123,105 @@ JOOService = EventDispatcher.extend({
 	}
 }).implement(AjaxInterface);
 
-JOOModel = Class.extend({
-	
-});
 /**
- * PluginManager. Manages all registered plugins
- * @augments Class
- * @author griever
+ * @class A model which supports property change event.
+ * @augments EventDispatcher
  */
-PluginManager = Class.extend({
+JOOModel = EventDispatcher.extend({
 	
+	bindings: function(obj) {
+		obj = obj || this;
+		for(var i in obj) {
+			this._bindings(obj, i);
+		}
+	},
+	
+	_bindings: function(obj, i) {
+		if (i == 'className' || i == 'ancestors' || i == 'listeners') 
+			return;
+		if (typeof obj[i] != 'function') {
+			if (obj[i] instanceof Object || obj[i] instanceof Array ) {
+				if (obj[i] instanceof Array) {
+					this.bindForArray(obj[i]);
+				}
+				this.bindings(obj[i]); //recursively bind
+			}
+			this.bindForValue(obj, i);
+		}
+	},
+	
+	bindForArray: function(obj) {
+		var _self = this;
+	    var length = obj.length;
+	    obj.__defineGetter__("length", function() {
+			return length;
+		});
+	    this.hookUp(obj, 'push', function(item) {
+	    	_self._bindings(obj, obj.length-1);
+	    });
+	    this.hookUp(obj, 'pop');
+	    this.hookUp(obj, 'splice', function() {
+	    	for(var i=2; i<arguments.length; i++) {
+	    		_self._bindings(obj, obj.length-arguments.length-i);
+	    	}
+	    });
+	},
+	
+	hookUp: function(obj, fn, callback) {
+		var _self = this;
+		var orig = obj[fn];
+	    obj[fn] = function() {
+	    	orig.apply(obj, arguments);
+	    	callback.apply(undefined, arguments);
+	    	_self.dispatchEvent('change');
+	    };
+	},
+	
+	bindForValue: function(obj, i) {
+		var _self = this;
+		var prop = "_"+i;
+		obj[prop] = obj[i];
+		obj[i] = undefined;
+		delete obj[i];
+		
+		if (!obj.__lookupGetter__(i)) {
+			obj.__defineGetter__(i, function() {
+		        return obj[prop];
+		    });
+		}
+		if (!obj.__lookupSetter__(i)) {
+			obj.__defineSetter__(i, function(val) {
+		        obj[prop] = val;
+		        _self.dispatchEvent('change');
+		    });
+		}
+	}
+});
+
+/**
+ * Create or extend model from ordinary object
+ * @param {Object} obj the object 
+ * @param {JOOModel} model existing model 
+ * @returns the result model
+ */
+JOOModel.from = function(obj, model) {
+	model = model || new JOOModel();
+	for(var i in obj) {
+		model[i] = obj[i];
+	}
+	model.bindings();
+	return model;
+};
+PluginManager = Class.extend(
+/** @lends PluginManager# */	
+{
 	/**
 	 * Initialize fields
-	 * @constructor
+	 * @class Manages all registered plugins
+	 * @singleton
+	 * @augments Class
+	 * @implements ObserverInterface
+	 * @constructs
 	 */
 	init: function()	{
 		if(PluginManager.singleton == undefined){
@@ -20002,9 +21235,8 @@ PluginManager = Class.extend({
 	
 	/**
 	 * Add plugin to the manager
-	 * @function
-	 * @param {plugin} the plugin to be added
-	 * @param {delay} whether the plugin should be loaded after added
+	 * @param {PluginInterface} plugin the plugin to be added
+	 * @param {Boolean} delay whether the plugin should not be loaded after added
 	 */
 	addPlugin: function(plugin, delay)	{
 		if (delay != true)
@@ -20014,8 +21246,7 @@ PluginManager = Class.extend({
 	
 	/**
 	 * Remove plugin at the specified index
-	 * @function
-	 * @param {index} the index of the plugin to be removed
+	 * @param {Number} index the index of the plugin to be removed
 	 */
 	removePlugin: function(index)	{
 		var plugin = this.plugins[index];
@@ -20027,8 +21258,7 @@ PluginManager = Class.extend({
 	
 	/**
 	 * Get all plugins
-	 * @function
-	 * @returns {Array} the current plugins
+	 * @returns {Array} the current maintained plugins
 	 */
 	getPlugins: function()	{
 		return this.plugins;
@@ -20036,7 +21266,6 @@ PluginManager = Class.extend({
 	
 	/**
 	 * Remove every plugins managed by this manager
-	 * @function
 	 */
 	removeAllPlugins: function()	{
 		for(var i=0;i<this.plugins.length;i++)	{
@@ -20049,10 +21278,9 @@ PluginManager = Class.extend({
 	},
 	
 	/**
-	 * Event hook. Triggered by the Subject and in turn triggers all plugins that it manages
-	 * @function
-	 * @param {eventName} the event name
-	 * @param {eventData} the event data
+	 * Triggered by the Subject and in turn triggers all plugins that it manages
+	 * @param {String} eventName the event name
+	 * @param {Object} eventData the event data
 	 */
 	notify: function(eventName, eventData)	{
 		for(var i=0;i<this.plugins.length;i++)	{
@@ -20073,53 +21301,103 @@ PluginManager = Class.extend({
 }).implement(ObserverInterface);
 
 /**
- * The plugin interface.
- * Provide the following methods:
- *  - isLoaded(): check if the plugin is loaded
- *  - getName(): get the plugin's name
- *  - onLoad(): called when the plugin is loaded
- *  - onBegin(): called when the plugin begins its routine
- *  - onEnd(): called when the plugin ends its routine
- *  - onUnload(): called when the plugin is unloaded from memory
- * @augments InterfaceImplementor
- * @author griever
+ * @class The plugin interface. Every plugins must implement this interface.
+ * A plugin is a class which provides extra functions via "Event Hook". It
+ * registers a list of hooks which is called automatically in the corresponding
+ * events.
+ * @augments ObserverInterface
+ * @interface
  */
 PluginInterface = InterfaceImplementor.extend({
 	implement: function(obj)	{
-		
+
 		obj.prototype.toString = obj.prototype.toString || function() {
 			return this.name;
 		};
 		
+		/**
+		 * Get the init parameters supplied by configuration.
+		 * This is usually configured in a <code>layout.txt</code>
+		 * @methodOf PluginInterface#
+		 * @name getInitParameters 
+		 * @returns {Array} the init parameters supplied by configuration
+		 */
 		obj.prototype.getInitParameters = obj.prototype.getInitParameters || function()	{
 			if (this.initParams == undefined)
 				this.initParams = Array();
 			return this.initParams;
 		};
 		
+		/**
+		 * Change the init parameters. This method is not intended to be used
+		 * by developers.
+		 * @methodOf PluginInterface#
+		 * @name setInitParameters 
+		 * @param {Object} params the init parameters
+		 */
 		obj.prototype.setInitParameters = obj.prototype.setInitParameters || function(params)	{
 			this.initParams = params;
 		};
 
+		/**
+		 * Test if the plugin is loaded.
+		 * @methodOf PluginInterface#
+		 * @name isLoaded 
+		 * @param {Boolean} <code>true</code> if the plugin is successfully loaded
+		 */
 		obj.prototype.isLoaded = obj.prototype.isLoaded || function()	{
 			if (this.loaded == undefined)
 				this.loaded = false;
 			return this.loaded;
 		};
 		
+		/**
+		 * Get the plugin name.
+		 * @methodOf PluginInterface#
+		 * @name getName
+		 * @param {String} the name of the plugin
+		 */
 		obj.prototype.getName = obj.prototype.getName || function()	{
 			return this.className;
 		};
 		
+		/**
+		 * Called automatically by {@link PluginManager} when the plugin is
+		 * loaded . Change the status of the plugin and call the 
+		 * <code>onBegin</code> method. Developers should override the 
+		 * <code>onBegin</code> method instead.
+		 * @methodOf PluginInterface#
+		 * @name onLoad
+		 */
 		obj.prototype.onLoad = obj.prototype.onLoad || function()	{
 			this.loaded = true;
 			this.onBegin();
 		};
 		
+		/**
+		 * Called inside <code>onLoad</code> method. Developers can override this
+		 * method to do some stuffs when the plugin is loaded.
+		 * @methodOf PluginInterface#
+		 * @name onBegin
+		 */
 		obj.prototype.onBegin = obj.prototype.onBegin || function() {};
 		
+		/**
+		 * Called inside <code>onUnload</code> method. Developers can override this
+		 * method to release resources before the plugin is unloaded.
+		 * @methodOf PluginInterface#
+		 * @name onEnd
+		 */
 		obj.prototype.onEnd = obj.prototype.onEnd || function() {};
 		
+		/**
+		 * Called automatically by {@link PluginManager} when the plugin is
+		 * no longer need. Change the status of the plugin and call the 
+		 * <code>onEnd</code> method. Developers should override the 
+		 * <code>onEnd</code> method instead.
+		 * @methodOf PluginInterface#
+		 * @name onUnload
+		 */
 		obj.prototype.onUnload = obj.prototype.onUnload || function()	{
 			this.loaded = false;
 			this.onEnd();
@@ -20131,15 +21409,19 @@ PluginInterface = InterfaceImplementor.extend({
 });
 
 /**
- * Interval timer interface. Used for circular portlets or plugins
- * Provide the following methods:
- *  - startInterval(interval, callback): start the interval timer
- *  - stopInterval(): stop the interval timer
- *  @augments InterfaceImplementor
- *  @author griever
+ * @class Interval timer interface. Used for circular behaviour.
+ * @interface
  */
 IntervalTimerInterface = InterfaceImplementor.extend({
 	implement: function(obj)	{
+		
+		/**
+		 * Start the timer.
+		 * @methodOf IntervalTimerInterface#
+		 * @param {Number} interval the interval
+		 * @param {Function} callback the callback function
+		 * @name startInterval
+		 */
 		obj.prototype.startInterval = obj.prototype.startInterval || function(interval, callback)	{
 			//stop previous interval timer if any
 			if (this.intervalSetup == true)	{
@@ -20150,6 +21432,11 @@ IntervalTimerInterface = InterfaceImplementor.extend({
 			this.currentIntervalID = setInterval(function() {callback.call(_this);}, interval);
 		};
 		
+		/**
+		 * Stop the timer.
+		 * @methodOf IntervalTimerInterface#
+		 * @name stopInterval
+		 */
 		obj.prototype.stopInterval = obj.prototype.stopInterval || function()	{
 			if (this.currentIntervalID != undefined)
 				clearInterval(this.currentIntervalID);
@@ -20159,20 +21446,16 @@ IntervalTimerInterface = InterfaceImplementor.extend({
 		};
 	}
 });
-/**
- * Page is a class for attaching portlets to appropriate position
- * a Page manages the display 
- * FIXME: not sure about provide supporting for template in each page ! 
- * currently unsupport
- * @augments Class
- * @author griever
- */
-
-Page = Class.extend({
+Page = Class.extend(
+/** @lends Page# */
+{
 	
 	/**
 	 * Initialize fields
-	 * @constructor
+	 * @class Page is a class for attaching portlets to appropriate position.
+	 * Page manages the display, the {@link PluginManager} & the {@link PortletContainer}.
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function(){
 		if(Page.singleton == undefined){
@@ -20187,8 +21470,10 @@ Page = Class.extend({
 	},
 	
 	/**
-	 * Attach portlets to the page
-	 * @function
+	 * Adds & loads portlets to the page.
+	 * It will also handle portlets lifecycle. Portlets which are no longer needed
+	 * will be unloaded. Portlets which exists between multiple pages will be
+	 * reloaded.
 	 */
 	attachPortlets: function(){
 		/*
@@ -20207,8 +21492,9 @@ Page = Class.extend({
 			}
 			var existed = false;
 			for( var i=0; i<this.portletContainer.portlets.length; i++ )	{
+				item.id = item.id || item.portlet;
 				var portletMeta = this.portletContainer.portlets[i];
-				if( item.portlet === portletMeta.portlet.getName() ){
+				if( item.id === portletMeta.id ){
 					existed = true;
 					portletMeta.portlet.setInitParameters(item.params);
 					if( item.position === portletMeta.position ){
@@ -20247,7 +21533,7 @@ Page = Class.extend({
 			var keep = false;
 			for(var item in this.layout){
 				item = this.layout[item];
-				if( item.portlet === portletMeta.portlet.getName() ){
+				if( item.id === portletMeta.id ){
 					if (item.active == false)	{
 						this.portletContainer.deactivatePortlet(portletMeta);
 					}
@@ -20267,9 +21553,9 @@ Page = Class.extend({
 	},
 	
 	/**
-	 * Private function
-	 * Parse the layout
-	 * @function
+	 * Parse the layout for a specific page.
+	 * @param {String} pagename the name of the page
+	 * @returns {Object} the layout of the page
 	 */
 	generateData: function(pagename) {
 		if (this.cache[pagename]) return this.cache[pagename];
@@ -20351,8 +21637,7 @@ Page = Class.extend({
 	},
 	
 	/**
-	 * Get the current request
-	 * @function
+	 * Get the current request.
 	 * @returns {Request} the current request
 	 */
 	getRequest: function(){
@@ -20360,18 +21645,17 @@ Page = Class.extend({
 	},
 	
 	/**
-	 * Change the current request
+	 * Change the current request.
 	 * This method <b>should not</b> be called by developers
-	 * @function
-	 * @param {Request} the new request
+	 * @param {Request} request the new request
 	 */
 	setRequest: function(request){
 		this.request = request;
 	},
 	
 	/**
-	 * Attach plugins to the page
-	 * @function
+	 * Attach plugins to the page. 
+	 * Plugins are treated the same way as portlets.
 	 */
 	attachPlugins: function(){
 		var oldPlugins = this.pluginManager.getPlugins();
@@ -20460,10 +21744,9 @@ Page = Class.extend({
 */
 	
 	/**
-	 * Called when the page begins its routine
-	 * Parse the layout and attach plugins
-	 * @param {pagename} the page name
-	 * @function
+	 * Called when the page begins its routine.
+	 * Parse the layout and attach plugins.
+	 * @param {String} pagename the page name
 	 */
 	onBegin: function(pagename)	{
 		var data = this.generateData(pagename);
@@ -20474,14 +21757,10 @@ Page = Class.extend({
 		this.plugins = data.plugins;
 		this.attachPlugins();
 		JOOUtils.generateEvent("PageBegan");
-		/*
-		this.template = data.template;
-		this.position = data.position;
-		*/
 	},
 	
 	/**
-	 * Run the page, attach portlets
+	 * Execute the page, attach portlets.
 	 */
 	run: function()	{
 		/*
@@ -20508,6 +21787,12 @@ Page = Class.extend({
 		return "Page";
 	}
 });
+/**
+ * @class A component used as a view of 1 portlet.
+ * Further version will allow user to interact with
+ * the portlet.
+ * @augments Graphic
+ */
 PortletCanvas = Graphic.extend({
 
 	setupBase: function(config) {
@@ -20523,22 +21808,11 @@ PortletCanvas = Graphic.extend({
 });
 
 /**
- * An interface for all portlets
- * Exposed method:
- * 	- void onBegin()
- *  - void run()
- *  - void onEnd()
- *  - String getName()
- *  - void setPortletPlaceholder(PortletPlaceholder)
- *  - PortletPlaceholder getPortletPlaceholder()
- *  - getPage(): get the current page
- *  - getRequest(): get the current request
- *  - requestForResource(): get the resource in the prepared portlet-data
- *  - requestForEffectiveResource(): get the resource in the portlet's DOM
- *  - getLocalizedText(): get the localized text by ID
- *  - getLocalizedMessage(): get the message by ID
- *  @augments InterfaceImplementor
- *  @author griever
+ * @class An interface for all portlets.
+ * A portlet is a pluggable UI components that is managed
+ * and rendered by JOO framework. A portlet is independent
+ * from the rest of the application.
+ * @interface
  */
 PortletInterface = InterfaceImplementor.extend({
 	implement: function(obj)	{
@@ -20547,30 +21821,106 @@ PortletInterface = InterfaceImplementor.extend({
 			return this.getName();
 		};
 		
+		/**
+		 * Get the name of the portlet. By default, it equals to the className of the
+		 * portlet.
+		 * @methodOf PortletInterface#
+		 * @name getName
+		 * @returns {String} The name of the portlet.
+		 */
 		obj.prototype.getName = obj.prototype.getName || function()	{
 			return this.className;
 		};
+		
+		/**
+		 * Called automatically by JOO framework when the portlet is initialized.
+		 * @methodOf PortletInterface#
+		 * @name onBegin
+		 */
 		obj.prototype.onBegin = obj.prototype.onBegin || function(){};
+		
+		/**
+		 * Called automatically by JOO framework when the portlet is loaded into DOM.
+		 * @methodOf PortletInterface#
+		 * @name run
+		 */
 		obj.prototype.run = obj.prototype.run || function(){};
+		
+		/**
+		 * Called automatically by JOO framework when the portlet is reloaded.
+		 * @methodOf PortletInterface#
+		 * @name onReloadPage
+		 */
+		obj.prototype.onReloadPage = obj.prototype.onReloadPage || function()	{};
+		
+		/**
+		 * Called automatically by JOO framework when the portlet is no longer needed.
+		 * @methodOf PortletInterface#
+		 * @name onEnd
+		 */
 		obj.prototype.onEnd = obj.prototype.onEnd || function(){};
+		
+		/**
+		 * Get the placeholder (container) of the portlet.
+		 * @methodOf PortletInterface#
+		 * @name getPortletPlaceholder
+		 * @returns {PortletPlaceholder} the placeholder of the portlet
+		 */
+		obj.prototype.getPortletPlaceholder = obj.prototype.getPortletPlaceholder || function()	{
+			return this.placeholder;
+		};
+		
+		/**
+		 * Change the placeholder (container) of the portlet.
+		 * This method is not intended to be used by developers.
+		 * @methodOf PortletInterface#
+		 * @name setPortletPlaceholder
+		 * @param {PortletPlaceholder} plhd the new placeholder of the portlet
+		 */
 		obj.prototype.setPortletPlaceholder = obj.prototype.setPortletPlaceholder || function(plhd)	{
 			this.placeholder = plhd;
 		};
 		
+		/**
+		 * Get the page instance
+		 * @methodOf PortletInterface#
+		 * @name getPage
+		 * @returns {Page} the page instance
+		 */
 		obj.prototype.getPage = obj.prototype.getPage || function()	{
 			return SingletonFactory.getInstance(Page);
 		};
 		
+		/**
+		 * Get the init parameters of the portlet. These parameters are
+		 * usually configured in a <code>layout.txt</code>
+		 * @methodOf PortletInterface#
+		 * @name getInitParameters
+		 * @param {Page} the page instance
+		 */
 		obj.prototype.getInitParameters = obj.prototype.getInitParameters || function()	{
 			if (this.initParams == undefined)
 				this.initParams = Array();
 			return this.initParams;
 		};
 		
+		/**
+		 * Change the init parameters. This method is not intended to be used
+		 * by developers.
+		 * @methodOf PortletInterface#
+		 * @name setInitParameters 
+		 * @param {Object} params the init parameters
+		 */
 		obj.prototype.setInitParameters = obj.prototype.setInitParameters || function(params)	{
 			this.initParams = params;
 		};
 		
+		/**
+		 * Get the current request
+		 * @methodOf PortletInterface#
+		 * @name getRequest
+		 * @param {Request} the current request
+		 */
 		obj.prototype.getRequest = obj.prototype.getRequest || function()	{
 			return this.getPage().getRequest();
 		};
@@ -20581,24 +21931,52 @@ PortletInterface = InterfaceImplementor.extend({
 			return rm.requestForCustomResource("#effective-area #"+this.getName()+"-"+resourceName+" "+condition);
 		};
 		
+		/**
+		 * Get the portlet resource. This resource resides in the portlet template
+		 * and is not visible to users.
+		 * @methodOf PortletInterface#
+		 * @name getPortletResource
+		 * @param resourceName the name (or ID) of the resource
+		 * @returns {Resource} the portlet (means template) resource with matching name
+		 */
 		obj.prototype.getPortletResource = obj.prototype.getPortletResource || function(resourceName)	{
 			var app = SingletonFactory.getInstance(Application);
 			var rm = app.getResourceManager();
 			return rm.requestForCustomResource("#"+this.getName()+"-RootData #"+this.getName()+"-"+resourceName);
 		};
 		
+		/**
+		 * Get the portlet DOM resource. This resource resides in the portlet rendered
+		 * content and is visible to users.
+		 * @methodOf PortletInterface#
+		 * @name getDomResource
+		 * @param resourceName the name of the resource
+		 * @returns {Resource} the DOM (means rendered) resource with matching name
+		 */
 		obj.prototype.getDomResource = obj.prototype.getDomResource || function(resourceName)	{
 			var app = SingletonFactory.getInstance(Application);
 			var rm = app.getResourceManager();
 			return rm.requestForCustomResource("#effective-area #"+this.getName()+"-"+resourceName);
 		};
 		
-		obj.prototype.onReloadPage = obj.prototype.onReloadPage || function()	{};
-		
+		/**
+		 * Get the <code>HTML ID</code> of a resource by its name.
+		 * @methodOf PortletInterface#
+		 * @name getResourceID
+		 * @param resourceName the name of the resource
+		 * @returns {String} the ID of the resource with matching name
+		 */
 		obj.prototype.getResourceID = obj.prototype.getResourceID || function(resourceName)	{
 			return this.getName()+"-"+resourceName;
 		};
 		
+		/**
+		 * Get a localized text.
+		 * @methodOf PortletInterface#
+		 * @name getLocalizedText
+		 * @param resourceName the name of the text
+		 * @returns {String} the localized text
+		 */
 		obj.prototype.getLocalizedText = obj.prototype.getLocalizedText || function(resourceName)	{
 			var app = SingletonFactory.getInstance(Application);
 			var rm = app.getResourceManager();
@@ -20608,6 +21986,13 @@ PortletInterface = InterfaceImplementor.extend({
 			return res.html();
 		};
 		
+		/**
+		 * Get a localized message. A message can be parameterized.
+		 * @methodOf PortletInterface#
+		 * @name getLocalizedMessage
+		 * @param resourceName the name of the message
+		 * @returns {String} the localized message
+		 */
 		obj.prototype.getLocalizedMessage = obj.prototype.getLocalizedMessage || function(resourceName)	{
 			var app = SingletonFactory.getInstance(Application);
 			var rm = app.getResourceManager();
@@ -20623,62 +22008,123 @@ PortletInterface = InterfaceImplementor.extend({
 			}
 			return resolved;
 		};
-		
-		obj.prototype.getPortletPlaceholder = obj.prototype.getPortletPlaceholder || function()	{
-			return this.placeholder;
-		};
 	}
 });
 
 /**
- * An interface for all portlets which need rendering
- * Exposed method:
- * 	- Object model
- * 	- String viewId
- *  - void render()
+ * @class An interface for all components which need rendering.
+ * The <code>RenderInterface</code> is commonly used in 
+ * user-defined <code>Portlet</code>. Note that a component can
+ * have multiple extra views besides the main view. In this case,
+ * developers should use <code>renderView</code> method.
+ * @interface
  */
 RenderInterface = InterfaceImplementor.extend({
+	
+	onModelChange: function() {
+		
+	},
+	
 	implement: function(obj)	{
+		/**
+		 * Render the component using microtemplating mechanism.
+		 * The component must supply the following:
+		 * <p>
+		 * 	<ul>
+		 *  	<li>A <code>viewId</code> or implement <code>getName</code> method</li>
+		 *  	<li>An optional <code>model</code> which is a Javascript object</li>
+		 *  	<li>A template, which must exists in DOM before this method is called.
+		 *  		The template should be a <code>script</code> element, with 
+		 *  		<i><code>text/html</code></i> <code>type</code> attributes.
+		 *  		The <code>id</code> of the template is the <code>viewId</code>
+		 *  		followed by "View".
+		 *  		<br />For example, suppose the <code>viewId</code> of the component
+		 *  		is MyComponent, then the <code>id</code> should be MyComponentView.
+		 *  	</li>
+		 *  </ul>
+		 * </p>
+		 * @name render
+		 * @methodOf RenderInterface#
+		 * @returns {String} the rendered content of the component
+		 */
 		obj.prototype.render = obj.prototype.render || function(){
 			this.viewId = this.viewId || this.getName()+"View";
-			this.model = this.model || {};
+			this.model = this.model || JOOModel.from({});
 //			if(this.viewId == undefined || this.model == undefined){
 //				throw "No viewId or model for rendering";
 //			}
 			return tmpl(this.viewId, this.model);
 		};
-		
+
+		/**
+		 * Render a specific view the component using microtemplating mechanism.
+		 * The component must supply the following:
+		 * <p>
+		 * 	<ul>
+		 *  	<li>A <code>viewId</code> or implement <code>getName</code> method</li>
+		 *  	<li>A view template, which must exists in DOM before this method is called.
+		 *  		The template should be a <code>script</code> element, with 
+		 *  		<i><code>text/html</code></i> <code>type</code> attributes.
+		 *  		The <code>id</code> of the template is the <code>viewId</code>
+		 *  		followed by "-" and the <code>view</code> parameters.
+		 *  		<br />For example, suppose the <code>viewId</code> of the component
+		 *  		is MyComponent, then calling <code>this.renderView("FirstView", {})</code>
+		 *  		inside the component will render the template with <code>id</code> 
+		 *  		MyComponent-FirstView.
+		 *  	</li>
+		 *  </ul>
+		 * </p>
+		 * @methodOf RenderInterface#
+		 * @name renderView
+		 * @returns {String} the rendered view of the component
+		 */
 		obj.prototype.renderView = obj.prototype.renderView || function(view, model)	{
-			return tmpl(this.getName()+"-"+view, model);
+			return tmpl((this.viewId || this.getName())+"-"+view, model);
+		};
+		
+		/**
+		 * Display and bind the model to the view.
+		 * @methodOf RenderInterface#
+		 * @name displayAndBind
+		 */
+		obj.prototype.displayAndBind = obj.prototype.displayAndBind || function()	{
+			var _self = this;
+			if (this.model) {
+				this.model.addEventListener('change', function() {
+					_self.getPortletPlaceholder().paintCanvas(_self.render());
+				});
+			}
+			this.getPortletPlaceholder().paintCanvas(this.render());
 		};
 	}
 });
 
-/**
- * A placeholder to store a single portlet
- * It acts as a bridge between Portlet and PortletCanvas
- * @augments Class
- * @author griever
- */
-PortletPlaceholder = Class.extend({
+PortletPlaceholder = Class.extend(
+/** @lends PortletPlaceholder# */		
+{
+
+	/**
+	 * @class A placeholder to store a single portlet.
+	 * It acts as a bridge between Portlet and {@link PortletCanvas}
+	 * @augments Class
+	 * @param canvas the portlet canvas
+	 * @constructs
+	 */
 	init: function(canvas)	{
 		this.canvas = canvas;
 	},
 	
 	/**
-	 * Add an object to canvas
-	 * @function
-	 * @param {object} the object to add
+	 * Add an object to the canvas
+	 * @param {Object} object the object to be added
 	 */
 	addToCanvas: function(object)	{
-		//console.log('add '+object.toHtml()+' into '+this.canvas.id);
 		this.canvas.addChild(object);
 	},
 	
 	/**
 	 * Clear everything and repaint the canvas
-	 * @param {html} the HTML data to be painted
-	 * @function
+	 * @param {String} html the HTML data to be painted
 	 */
 	paintCanvas: function(html)	{
 		this.canvas.repaint(html);
@@ -20688,8 +22134,7 @@ PortletPlaceholder = Class.extend({
 	
 	/**
 	 * Append to the canvas
-	 * @param {html} the HTML data to be appended
-	 * @function
+	 * @param {String} html the HTML data to be appended
 	 */
 	drawToCanvas: function(html)	{
 		this.canvas.paint(html);
@@ -20699,7 +22144,7 @@ PortletPlaceholder = Class.extend({
 	
 	/**
 	 * Access the underlying canvas
-	 * @returns {PortletCanvas} the canvas
+	 * @returns {PortletCanvas} the portlet canvas
 	 */
 	getCanvas: function()	{
 		return this.canvas;
@@ -20710,10 +22155,15 @@ PortletPlaceholder = Class.extend({
 	}
 });
 
-/**
- * A container which 'runs' multiple portlets
- */
-PortletContainer = Class.extend({
+PortletContainer = Class.extend(
+/** @lends PortletContainer# */
+{
+	/**
+	 * @class A container which maintains and controls multiple portlets
+	 * @singleton
+	 * @augments Class
+	 * @constructs
+	 */
 	init: function()	{
 		if(PortletContainer.singleton == undefined){
 			throw "Singleton class";
@@ -20724,13 +22174,10 @@ PortletContainer = Class.extend({
 	
 	/**
 	 * Add a portlet to this container and initialize it
-	 * @function
-	 * @param {portlet} the portlet to be added
-	 * @param {position} the position of the portlet
-	 * @param {active} whether the portlet should be loaded
+	 * @param {PortletInterface} portlet the portlet to be added
+	 * @param {Object} item portlet metadata
 	 */
 	addPortlet: function(portlet, item)	{
-//		console.log('adding portlet: '+portlet.getName(), 'color: red');
 		var portletMeta = {};
 		for(var i in item)	{
 			portletMeta[i] = item[i];
@@ -20751,9 +22198,9 @@ PortletContainer = Class.extend({
 	
 	/**
 	 * Move the portlet to another position
-	 * @function
-	 * @param {portlet} the portlet to be moved
-	 * @param {newPosition} the new position
+	 * @param {Object} portletMeta the metadata associated with the portlet to be moved
+	 * @param {String} newPosition the new position, which is the <code>id</code>
+	 * of a DOM element
 	 */
 	movePortlet: function(portletMeta, newPosition)	{
 		var portletPosition = new Stage({id: newPosition});
@@ -20762,8 +22209,7 @@ PortletContainer = Class.extend({
 	},
 	
 	/**
-	 * Load all active portlets, execute them synchronously
-	 * @function
+	 * Load all active portlets, execute them synchronously.
 	 */
 	loadPortlets: function()	{
 		for(var i=0;i<this.portlets.length;i++)	{
@@ -20777,7 +22223,6 @@ PortletContainer = Class.extend({
 	
 	/**
 	 * Get all portlets
-	 * @function
 	 * @returns {Array} All loaded portlets
 	 */
 	getPortlets: function()	{
@@ -20785,23 +22230,30 @@ PortletContainer = Class.extend({
 	},
 	
 	/**
-	 * Get portlet meta using the portlet's name
-	 * @function
-	 * @param {name} the portlet's name
+	 * Get portlet metadata using the portlet's name
+	 * @param {String} name the portlet's name
 	 */
 	getPortletMetaByName: function(name)	{
-		var i;
-		for( i=0; i<this.portlets.length; i++ ){
-			if(this.portlets[i].portlet.getName() == name){
-				return this.portlets[i];
-			}
+		return this.portlets.map(function(portlet) {
+			if (portlet.portlet.getName() == name)
+				return portlet;
+		});
+	},
+	
+	/**
+	 * Get portlet metadata using the portlet's name
+	 * @param {String} name the portlet's name
+	 */
+	getPortletMetaById: function(id)	{
+		for(var i=0; i<portlets.length; i++) {
+			if (portlet.id == id)
+				return portlet;
 		}
 	},
 	
 	/**
 	 * Remove portlet at the specified position
-	 * @function
-	 * @param {position} the position of the portlet to be removed
+	 * @param {String} position the position of the portlet to be removed
 	 */
 	removePortlet: function(position)	{
 		var portletMeta = this.portlets[position];
@@ -20836,9 +22288,8 @@ PortletContainer = Class.extend({
 	},
 	
 	/**
-	 * Activate a portlet
-	 * @function
-	 * @param {portletMeta} the metadata of the portlet to be activated
+	 * Activate a portlet.
+	 * @param {Object} portletMeta the metadata of the portlet to be activated
 	 */
 	activatePortlet: function(portletMeta)	{
 		var portlet = portletMeta.portlet;
@@ -20862,9 +22313,8 @@ PortletContainer = Class.extend({
 	},
 	
 	/**
-	 * Deactivate a portlet
-	 * @function
-	 * @param {portletMeta} the metadata of the portlet to be deactivated
+	 * Deactivate a portlet.
+	 * @param {Object} portletMeta the metadata of the portlet to be deactivated
 	 */
 	deactivatePortlet: function(portletMeta)	{
 		var portlet = portletMeta.portlet;
@@ -20882,13 +22332,29 @@ PortletContainer = Class.extend({
 	}
 });
 
-RenderPortlet = Class.extend({
-	
+/**
+ * @class A simple portlet used for rendering
+ * @augments Class
+ * @implements PortletInterface
+ * @implements RenderInterface
+ */
+RenderPortlet = Class.extend(
+/** @lends RenderPortlet# */	
+{
+	/**
+	 * Render and display the portlet.
+	 */
 	run: function() {
 		this.getPortletPlaceholder().paintCanvas(this.render());
 	}
 }).implement(PortletInterface, RenderInterface);
-DefaultErrorHandler = Class.extend({
+ErrorHandler = Class.extend({
+	handle: function(err, event) {
+		
+	}
+});
+
+DefaultErrorHandler = ErrorHandler.extend({
 	handle: function(err, event) {
 		if (typeof err == 'object') {
 			if (err.Exception == 'RequestInterrupted') {
@@ -20905,11 +22371,20 @@ DefaultErrorHandler = Class.extend({
 	}
 });
 
-/**
- * Represents a request
- */
-Request = Class.extend({
-	
+Request = Class.extend(
+/** @lends Request# */		
+{
+	/**
+	 * Create a new request.
+	 * @param {String} name the name of the page
+	 * @param {Object} type reserved
+	 * @param {Object} params the parameters associated with the request
+	 * @param {hideParams} a list of parameters that will not be displayed in
+	 * the URL bar when the request is executed
+	 * @class Represents a request
+	 * @augments Class
+	 * @constructs
+	 */
 	init: function(name, type, params, hideParams) {
 		if (name != undefined)
 			name = name.trim();
@@ -20928,51 +22403,80 @@ Request = Class.extend({
 	},
 	
 	/**
-	 * Check if the request is demanded by the application itself
-	 * @function
-	 * @returns {bool} true or false
+	 * Check if the request is demanded by the application itself.
+	 * @returns {Boolean} the demanding flag
 	 */
 	isDemanded: function() {
 		return this.demanded;
 	},
 	
 	/**
-	 * Change the demanding flag of the current request
-	 * Demanded request will be automatically routed
-	 * @function
-	 * @param {b} the demanding flag
+	 * Change the demanding flag of the current request.
+	 * Demanded request will be automatically routed.
+	 * @param {Boolean} b the demanding flag
 	 */
 	demand: function(b) {
 		this.demanded = b;
 	},
 	
+	/**
+	 * Set the value of a specific parameter
+	 * @param {String} key the parameter name
+	 * @param {String} value the new value
+	 */
 	setParam: function(key, value) {
 		this.params[key] = value;
 	},
 	
+	/**
+	 * Change all parameters to a new map
+	 * @param {Object} params the new parameters map
+	 */
 	setParams: function(params) {
 		this.params = params;
 	},
-	
+
+	/**
+	 * Get the value of a paramter of current request
+	 * @param {String} key the parameter
+	 * @param {String} defaultValue the default value, if the parameter is not defined
+	 * @returns {String} the value of the parameter
+	 */
 	getParam: function(key, defaultValue) {
 		if (this.params[key] == undefined) {
 			return defaultValue;
 		}
 		return this.params[key];
 	},
-	
+
+	/**
+	 * Get all parameters.
+	 * @returns {Object} the parameters map
+	 */
 	getParams: function() {
 		return this.params;
 	},
 	
+	/**
+	 * Change the hash value of current location.
+	 * @param {String} strToAdd the location after the hash symbol (#)
+	 */
 	addHash: function(strToAdd) {
 		window.location.hash = strToAdd;
 	},
 	
+	/**
+	 * Change the name of the page represented by this request.
+	 * @param {String} name the name of the page
+	 */
 	setName: function(name) {
 		this.name = name;
 	},
-	
+
+	/**
+	 * Get the name of the page represented by this request
+	 * @returns {String}
+	 */
 	getName: function() {
 		return this.name;
 	},
@@ -20995,6 +22499,7 @@ Request.setProactive = function(b, url) {
 		Request.proactive = {};
 	Request.proactive[url] = b;
 };
+
 Request.getProactive = function(url) {
 	if (url == undefined)
 		url = window.location.hash;
@@ -21002,11 +22507,15 @@ Request.getProactive = function(url) {
 		Request.proactive = {};
 	return Request.proactive[url];
 };
-RequestHandler = Class.extend({
-	
+
+RequestHandler = Class.extend(
+/** @lends RequestHandler# */		
+{
 	/**
-	 * Init fields
-	 * @constructor
+	 * Initialize fields
+	 * @class Default request handler
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function() {
 		this.currentPage = undefined;
@@ -21018,6 +22527,7 @@ RequestHandler = Class.extend({
 	
 	/**
 	 * Change the error handler
+	 * @param {ErrorHandler} errorHandler the new error handler
 	 */
 	setErrorHandler: function(errorHandler) {
 		this.errorHandler = errorHandler;
@@ -21025,8 +22535,7 @@ RequestHandler = Class.extend({
 	
 	/**
 	 * Route (if needed) and handle a request
-	 * @function
-	 * @param {request} the request to be handled
+	 * @param {Request} request the request to be handled
 	 */
 	handleRequest: function(request) {
 		//console.log('current page is '+this.currentPage);
@@ -21058,7 +22567,7 @@ RequestHandler = Class.extend({
 			*/
 			this.errorHandler.handle(err, 'onBegin');
 		}
-
+		
 		//console.log('current page running: '+request.getName());
 
 		try 
@@ -21072,7 +22581,7 @@ RequestHandler = Class.extend({
  			*/
 			this.errorHandler.handle(err, 'run');
 		}
-
+		
 		try 
 		{
 			page.onEnd();
@@ -21093,7 +22602,7 @@ RequestHandler = Class.extend({
 	},
 	
 	/**
-	 * Define setter and getter for the window location hash
+	 * Define setter and getter for the window location hash.
 	 */
 	prepareForRequest: function() {
 		if(!("hash" in window.location)) {
@@ -21112,7 +22621,6 @@ RequestHandler = Class.extend({
 	
 	/**
 	 * Create a request based on the current URL
-	 * @function
 	 */
 	assembleRequest: function() {
 		var defaultPage = SingletonFactory.getInstance(Application).getSystemProperties().get('page.default', 'Home');
@@ -21150,9 +22658,8 @@ RequestHandler = Class.extend({
 	},
 	
 	/**
-	 * Modify the URL (i.e the window location) based on the request
-	 * @function
-	 * @param {request} the request to be routed
+	 * Modify the URL (i.e the window location) based on the request.
+	 * @param {Request} request the request to be routed
 	 */
 	routeRequest: function(request) {
 		//if this request neither proactive nor demanded, then there's no point routing it
@@ -21207,16 +22714,19 @@ RequestHandler = Class.extend({
 	}
 });
 /**
- * The bootstrap class.
- * The application's flow is defined here
- * Implement ObserverInterface
+ * Create a new Bootstrap
+ * @class The pluggable bootstrap class.
+ * Application flow is defined here. Developers can extends this class
+ * to create custom bootstraps.
  * @augments Class
+ * @implements ObserverInterface
  */
-Bootstrap = Class.extend({
+Bootstrap = Class.extend(
+/** @lends Bootstrap# */		
+{
 	/**
-	 * Called when the application start running
-	 * Subclass can override this method to change the default flow
-	 * @function
+	 * Called when the application start running.
+	 * Subclass can override this method to change the application flow
 	 */
 	run: function()	{
 		this.registerObserver();
@@ -21225,32 +22735,31 @@ Bootstrap = Class.extend({
 	},
 
 	/**
-	 * Event-hooked function.
-	 * @function
+	 * Route the request
+	 * @param {Request} eventData the request to be routed
+	 * @observer
 	 */
 	onRequestRoute: function(eventData)	{
-		this.requestHandler.handleRequest(eventData);
+		this.requestHandler.routeRequest(eventData);
 	},
 	
 	/**
-	 * Event-hooked function.
-	 * @function
+	 * Assemble the request based on current URL
+	 * @observer
 	 */
-	onNeedAssembleRequest: function(eventData)	{
+	onNeedAssembleRequest: function()	{
 		this.executeRequest();
 	},
 
 	/**
 	 * Initialize the request handler
-	 * @function
 	 */
 	setupRequestHandler: function()	{
 		this.requestHandler = new RequestHandler();
 	},
 	
 	/**
-	 * Execute the current request
-	 * @function
+	 * Execute current request
 	 */
 	executeRequest: function()	{
 		var subject = SingletonFactory.getInstance(Subject);
@@ -21258,7 +22767,7 @@ Bootstrap = Class.extend({
 		this.requestHandler.prepareForRequest();
 		var request = this.requestHandler.assembleRequest();
 		if (request != undefined)	{
-			subject.notifyEvent('RequestRoute', request);
+			this.requestHandler.handleRequest(request);
 		}
 	},
 	
@@ -21274,10 +22783,8 @@ utils_items = {};
 
 /**
  * Generate an unique ID
- * 
- * @param type
- *            String
- * @returns
+ * @param {String} type the type used for generation
+ * @returns an unique ID
  */
 function generateId(type)	{
 	if (!isPropertySet(utils_items, type))	{
@@ -21453,6 +22960,7 @@ function getPositionFromRotatedCoordinate(pos, angle, coef) { // angle in radian
 }
 
 ExpressionUtils = {
+		
 	getMutatorMethod: function(obj, prop) {
 		var methodName = "set"+prop.substr(0, 1).toUpperCase()+prop.substr(1);
 		return obj[methodName];
@@ -21462,78 +22970,78 @@ ExpressionUtils = {
 		var methodName = "get"+prop.substr(0, 1).toUpperCase()+prop.substr(1);
 		return obj[methodName];
 	}
-}
+};
 
 JOOUtils = {
 		
-		isTag: function(q) {
-			var testTag = /<([\w:]+)/;
-			return testTag.test(q);
-		},
-		
-		getApplication: function() {
-			return SingletonFactory.getInstance(Application);
-		},
-		
-		getSystemProperty: function(x) {
-			return SingletonFactory.getInstance(Application).getSystemProperties().get(x);
-		},
-		
-		getResourceManager: function() {
-			return SingletonFactory.getInstance(Application).getResourceManager();
-		},
-		
-		access: function(name, type, resourceLocator) {
-			return SingletonFactory.getInstance(Application).getResourceManager().requestForResource(type, name, resourceLocator, true);
-		},
-		
-		accessCustom: function(custom, resourceLocator) {
-			return SingletonFactory.getInstance(Application).getResourceManager().requestForCustomResource(custom,resourceLocator);
-		},
-		
-		generateEvent: function(eventName, eventData) {
-		    var subject = SingletonFactory.getInstance(Subject);
-		    subject.notifyEvent(eventName, eventData);
-		},
-		
-		getAttributes: function(element) {
-			var attrs = {};
-			var attributes = element.attributes;
-			for(var i=0; i<attributes.length; i++) {
-				attrs[attributes[i].nodeName] = attributes[i].nodeValue;
-			}
-			return attrs;
+	isTag: function(q) {
+		var testTag = /<([\w:]+)/;
+		return testTag.test(q);
+	},
+	
+	getApplication: function() {
+		return SingletonFactory.getInstance(Application);
+	},
+	
+	getSystemProperty: function(x) {
+		return SingletonFactory.getInstance(Application).getSystemProperties().get(x);
+	},
+	
+	getResourceManager: function() {
+		return SingletonFactory.getInstance(Application).getResourceManager();
+	},
+	
+	access: function(name, type, resourceLocator) {
+		return SingletonFactory.getInstance(Application).getResourceManager().requestForResource(type, name, resourceLocator, true);
+	},
+	
+	accessCustom: function(custom, resourceLocator) {
+		return SingletonFactory.getInstance(Application).getResourceManager().requestForCustomResource(custom,resourceLocator);
+	},
+	
+	generateEvent: function(eventName, eventData) {
+	    var subject = SingletonFactory.getInstance(Subject);
+	    subject.notifyEvent(eventName, eventData);
+	},
+	
+	getAttributes: function(element) {
+		var attrs = {};
+		var attributes = element.attributes;
+		for(var i=0; i<attributes.length; i++) {
+			attrs[attributes[i].nodeName] = attributes[i].nodeValue;
 		}
-	};
-/**
- * A wrapper of the system properties.
- * Used for accessing the memcached namespace
- * @augments Class
- * @author griever
- */
-Memcached = Class.extend({
+		return attrs;
+	}
+};
+Memcached = Class.extend(
+/** @lends Memcached# */		
+{
 	
 	/**
-	 * Initialize fields
-	 * @constructor
+	 * Initialize fields.
+	 * @class A wrapper of the system properties.
+	 * Used for accessing the memcached namespace
+	 * @augments Class
+	 * @constructs
 	 */
 	init: function()	{
 		this.properties = SingletonFactory.getInstance(Application).getSystemProperties();
 	},
 	
 	/**
-	 * Private function.
 	 * Get the actual entry name for the the specified key
+	 * @private
+	 * @param {String} key the key
+	 * @returns {String} the entry name
 	 */
 	getEntryName: function(key)	{
 		return 'memcached.'+key;
 	},
 	
 	/**
-	 * Store a value in the specified key
-	 * @function
-	 * @param {key} the key
-	 * @param {value} the new value
+	 * Store a value in the specified key.
+	 * @param {String} key the key
+	 * @param {Object} value the key's value
 	 */
 	store: function(key, value)	{
 		var entry = this.getEntryName(key);
@@ -21541,10 +23049,9 @@ Memcached = Class.extend({
 	},
 	
 	/**
-	 * Retrieve the value of the specified key
-	 * @function
-	 * @param {key} the key
-	 * @returns {mixed} the value of the key
+	 * Retrieve the value of the specified key.
+	 * @param {String} the key
+	 * @returns {Object} the value of the key
 	 */
 	retrieve: function(key)	{
 		var entry = this.getEntryName(key);
@@ -21552,8 +23059,7 @@ Memcached = Class.extend({
 	},
 	
 	/**
-	 * Clear the content of the specified key
-	 * @function
+	 * Clear the content of the specified key.
 	 * @param {key} the key
 	 */
 	clear: function(key)	{
