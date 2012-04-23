@@ -132,7 +132,7 @@ public class JooSDK {
 				getResource("/templates/samples/sample.css"), monitor);
 		addFileToProject(container, new Path("static/app/js/portlets/samples/SamplePortlet.js"),
 				getResource("/templates/samples/SamplePortlet.js"), monitor);
-		addFileToProject(container, new Path("static/microtemplating/default/samples/SamplePortlet.htm"),
+		addFileToProject(container, new Path("static/app/microtemplating/default/samples/SamplePortlet.htm"),
 				getResource("/templates/samples/SamplePortlet.htm"), monitor);
 
 		final IFolder distFolder = container.getFolder(new Path("dist"));
