@@ -65,7 +65,7 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 				createProject(desc, projectHandle, monitor);
 			}
 		};
-
+		
 		/*
 		 * This isn't as robust as the code in the BasicNewProjectResourceWizard
 		 * class. Consider beefing this up to improve error handling.
@@ -149,6 +149,12 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 			IContainer container = (IContainer) proj;
 			
 			addFiles(container, monitor);
+			
+			try {
+				JooSDK.addNature(proj);
+			} catch (CoreException e1) {
+				e1.printStackTrace();
+			}
 		} catch (IOException ioe) {
 			IStatus status = new Status(IStatus.ERROR, "ExampleWizard",
 					IStatus.OK, ioe.getLocalizedMessage(), null);

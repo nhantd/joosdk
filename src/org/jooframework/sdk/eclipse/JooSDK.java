@@ -17,6 +17,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -30,6 +32,20 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class JooSDK {
+	
+	public static void addNature(IProject project) throws CoreException {
+		IProjectDescription description = project.getDescription();
+		String[] natures = description.getNatureIds();
+		
+		// Add the nature
+		if (!project.hasNature(JOONature.NATURE_ID)) {
+			String[] newNatures = new String[natures.length + 1];
+			System.arraycopy(natures, 0, newNatures, 0, natures.length);
+			newNatures[natures.length] = JOONature.NATURE_ID;
+			description.setNatureIds(newNatures);
+			project.setDescription(description, null);
+		}
+	}
 	
 	public static void createDefaultStructure(IContainer container, IProgressMonitor monitor) throws CoreException, IOException {
 		/* Add the resource folder */
@@ -50,12 +66,8 @@ public class JooSDK {
 		final IFolder frameworkStyleFolder = container.getFolder(new Path("static/framework/css"));
 		frameworkStyleFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/framework/css/portlet.css"),
-				getResource("/templates/portlet.css"), monitor);
-		addFileToProject(container, new Path("static/framework/css/ui.css"),
-				getResource("/templates/ui.css"), monitor);
-		addFileToProject(container, new Path("static/framework/css/tooltips.css"),
-				getResource("/templates/tooltips.css"), monitor);
+		addFileToProject(container, new Path("static/framework/css/joo-2.0.3.css"),
+				getResource("/templates/joo-2.0.3.css"), monitor);
 		
 		/* Add the images folder */
 		final IFolder imagesFolder = container.getFolder(new Path("static/images"));
@@ -90,8 +102,8 @@ public class JooSDK {
 		final IFolder jsFwFolder = container.getFolder(new Path("static/framework/js"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/framework/js/joo-2.0.2.js"),
-				getResource("/templates/joo-2.0.2.js"), monitor);
+		addFileToProject(container, new Path("static/framework/js/joo-2.0.3.js"),
+				getResource("/templates/joo-2.0.3.js"), monitor);
 		addFileToProject(container, new Path("static/framework/js/class-name-injection.js"),
 				getResource("/templates/class-name-injection.js"), monitor);
 		
