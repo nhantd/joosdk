@@ -15053,17 +15053,72 @@ CompositionRenderInterface = InterfaceImplementor.extend({
 		 * @name renderUIComposition
 		 */
 		obj.prototype.renderUIComposition = obj.prototype.renderUIComposition || function() {
-			var composition = $($('#UI-'+this.className)[0].innerHTML);
-			_self.processElement(this, this, composition[0]);
+			model = this.config.model || {};
+			var composition = $(tmpl(this.className+"View", model));
+			_self.processElement(this, this, composition[0], model);
+		};
+		
+		obj.prototype.bindModelView = obj.prototype.bindModelView || function(ui, model, path) {
+			ui.setValue(ExpressionUtils.express(model, path));
+			
+			//constraint model to view
+			model.addEventListener('change', function(e) {
+				if (this._currentTarget == ui)
+					return;
+				if (e.path == path) {
+					if (e.type == 'setter') {
+						var _currentTarget = ui._currentTarget;
+						ui._currentTarget = this;
+						ui.setValue(ExpressionUtils.express(model, path));
+						ui._currentTarget = _currentTarget;
+					} else {
+						//we'll omit this in this tutorial
+					}
+				}
+			});
+			
+			//constraint view to model
+			ui.addEventListener('change', function(e) {
+				if (this._currentTarget == model)
+					return;
+				var _currentTarget = model._currentTarget;
+				model._currentTarget = this;
+				ExpressionUtils.expressSetter(model, path, ui.getValue());
+				model._currentTarget = _currentTarget;
+			});
 		};
 	},
 	
-	processElement: function(root, obj, composition) {
+	processElement: function(root, obj, composition, model) {
 		var $composition = $(composition);
 		var tagName = composition.tagName.toLowerCase();
 		var children = $composition.children();
 		var currentObject = obj;
 		var config = JOOUtils.getAttributes(composition);
+		
+		var handlers = {};
+		var bindings = undefined;
+		
+		var isAddTab = false;
+		var isAddItem = false;
+		var tabTitle = undefined;
+		
+		for(var i in config) {
+			if (i.indexOf('handler:') != -1) {
+				var event = i.substr(8);
+				var fn = config[i];
+				handlers[event] = new Function(fn);
+				delete config[i];
+			} else if (config[i].indexOf('#{') == 0) {
+				var expression = config[i].substr(2, config[i].length-3);
+				config[i] = ExpressionUtils.express(model, expression);
+				bindings = expression;
+			} else if (config[i].indexOf('${') == 0) {
+				var expression = config[i].substr(2, config[i].length-3);
+				config[i] = ExpressionUtils.express(root, expression);
+//				bindings = expression;
+			}
+		}
 		
 		switch(tagName) {
 		case "joo:composition":
@@ -15076,12 +15131,45 @@ CompositionRenderInterface = InterfaceImplementor.extend({
 			var varName = $composition.attr('name');
 			currentObject = obj[varName];
 			break;
+		case "joo:addtab":
+			isAddTab = true;
+			tabTitle = config.title;
+			break;
+		case "joo:additem":
+			isAddItem = true;
+			break;
 		default:
 			if (config.custom) {
 				config.custom = eval('('+config.custom+')');
 			}
 			var className = ClassMapping[tagName.split(':')[1]];
-			currentObject = new window[className](config);
+			if (className) {
+				currentObject = new window[className](config);
+			} else {
+				throw "Undefined UI Tag: "+tagName;
+			}
+		}
+		
+		for(var i in handlers) {
+			(function(i) {
+				currentObject.addEventListener(i, function() {
+					try {
+						handlers[i].apply(root, arguments);
+					} catch (err) {
+						log(err);
+					}
+				});
+			})(i);
+		}
+		
+		if (bindings) {
+			/*
+			currentObject.dataBindings = bindings;
+			currentObject.addEventListener('change', function() {
+				root.dispatchEvent('bindingchanged', currentObject);
+			});
+			*/
+			root.bindModelView(currentObject, model, bindings);
 		}
 		
 		var varName = $composition.attr('varName');
@@ -15090,8 +15178,16 @@ CompositionRenderInterface = InterfaceImplementor.extend({
 		}
 		
 		for(var i=0; i<children.length; i++) {
-			var child = this.processElement(root, currentObject, children[i]);
-			currentObject.addChild(child);
+			var child = this.processElement(root, currentObject, children[i], model);
+			if (isAddTab) {
+				currentObject.addTab(tabTitle, child);
+			} else if (isAddItem) {
+				currentObject.addItem(child);
+			}
+			else {
+				if (currentObject != child)
+					currentObject.addChild(child);
+			}
 		}
 		return currentObject;
 	}
@@ -15221,7 +15317,7 @@ EventDispatcher = Class.extend(
 	 * @param {String} event the event to be dispatched.
 	 */
 	dispatchEvent: function(event) {
-		if (this.listeners && this.listeners[event] != undefined) {
+		if (!this.disabled && this.listeners && this.listeners[event] != undefined) {
 			var handlers = this.listeners[event];
 			var args = Array();
 			for(var i=1; i<arguments.length; i++) {
@@ -15246,6 +15342,10 @@ EventDispatcher = Class.extend(
 			if (index != -1)
 				this.listeners[event].splice(index, 1);
 		}
+	},
+	
+	disable: function(disabled) {
+		this.disabled = disabled;
 	},
 	
 	toString: function() {
@@ -15290,8 +15390,8 @@ DisplayObject = EventDispatcher.extend(
 		this.setupDisplay(config);
 		this.setupDomObject(config);
 		
-		var objMgr = SingletonFactory.getInstance(Application).getObjectManager();
-		objMgr.register(this);
+//		var objMgr = SingletonFactory.getInstance(Application).getObjectManager();
+//		objMgr.register(this);
 	},
 	
 	/**
@@ -15345,7 +15445,7 @@ DisplayObject = EventDispatcher.extend(
 	},
 	
 	_appendBaseClass: function(className) {
-		this.classes.push(className);
+		this.classes.push('joo-'+className.toLowerCase());
 	},
 
 	/**
@@ -15386,20 +15486,26 @@ DisplayObject = EventDispatcher.extend(
 	setupDomObject: function(config) {
 		this.domObject = JOOUtils.accessCustom(this.toHtml());
 		this.setAttribute('id', this.id);
-		var c = this.inheritedCSSClasses? this.classes.length : 1;
-		for(var i=0; i<c; i++) {
-			this.access().addClass('joo-'+this.classes[i].toLowerCase());
-		}
+//		var c = this.inheritedCSSClasses? this.classes.length : 1;
+//		for(var i=0; i<c; i++) {
+//			this.access().addClass('joo-'+this.classes[i].toLowerCase());
+//		}
+		this.classes.push('joo-ui');
+		this.setAttribute('class', this.classes.join(' '));
 		this.classes = undefined;
-		this.access().addClass('joo-ui');	//for base styles, e.g: all DisplayObject has 'position: absolute'
+//		this.access().addClass('joo-ui');	//for base styles, e.g: all DisplayObject has 'position: absolute'
 		
 		if (config.tooltip)
 			this.setAttribute('title', config.tooltip);
-		if (!config.absolute) {
-			var x = config.x || 0;
-			var y = config.y || 0;
-			this.setLocation(x, y);
-		}
+//		if (!config.absolute) {
+			if (config.x != undefined)
+				this.setX(config.x);
+			if (config.y != undefined)
+				this.setY(config.y);
+//			var x = config.x || 0;
+//			var y = config.y || 0;
+//			this.setLocation(x, y);
+//		}
 		if (config['background-color'] != undefined)
 			this.setStyle('background-color', config['background-color']);
 		
@@ -15719,22 +15825,28 @@ DisplayObject = EventDispatcher.extend(
 	 * Developers should use the <code>selfRemove</code> method instead.</p>
 	 * @private
 	 */
-	dispose: function() {
+	dispose: function(skipRemove) {
 		this.dispatchEvent('dispose');
 		
-		this.access().remove();
-		var objMgr = SingletonFactory.getInstance(Application).getObjectManager();
-		objMgr.remove(this);
+		if (!skipRemove) {
+			this.access().remove();
+		}
+//		var objMgr = SingletonFactory.getInstance(Application).getObjectManager();
+//		objMgr.remove(this);
 		this.listeners = undefined;
 		this.config = undefined;
 		this.dead = true;
 		
-		if (this.domEventBound != undefined) {
-			for(var i in this.domEventBound) {
-				this.access().unbind(i, this.bindEvent);
-			}
+		//if (this.domEventBound != undefined) {
+			//for(var i in this.domEventBound) {
+				//this.access().unbind(i, this.bindEvent);
+			//}
+			//this.access().unbind();
 			this.domEventBound = undefined;
-		}
+		//}
+		this._parent = undefined;
+		this.domObject = undefined;
+		this.stage = undefined;
 	},
 	
 	/**
@@ -15758,8 +15870,7 @@ DisplayObject = EventDispatcher.extend(
 	 */
 	disable: function(disabled) {
 		//TODO check if the disabled flag is actually changed
-		
-		this.disabled = disabled;
+		this._super(disabled);
 		if (disabled) {
 			this.access().addClass('disabled');
 			this.setAttribute('disabled', 'disabled');
@@ -15949,6 +16060,13 @@ DisplayObjectContainer = DisplayObject.extend(
 		this.children.splice(index, 1);
 		object.dispose();
 	},
+	
+	removeAllChildren: function() {
+		for(var i=this.children.length-1; i>=0; i--) {
+			this.children[i].dispose();
+		}
+		this.children = Array();
+	},
 
 	/**
 	 * Detach (but not dispose) a child component.
@@ -15962,6 +16080,7 @@ DisplayObjectContainer = DisplayObject.extend(
 			if (obj.getId() == object.getId())	{
 				this.children.splice(i, 1);
 				obj.access().detach();
+				obj._parent = undefined;
 			}
 		}
 	},
@@ -16004,11 +16123,12 @@ DisplayObjectContainer = DisplayObject.extend(
 		this.layout = layout;
 	},
 	
-	dispose: function() {
+	dispose: function(skipRemove) {
 		for(var i=0;i<this.children.length;i++) {
-			this.children[i].dispose();
+			this.children[i].dispose(true);
 		}
-		this._super();
+		this.children = undefined;
+		this._super(skipRemove);
 	}
 });
 
@@ -16034,6 +16154,12 @@ CustomDisplayObject = DisplayObjectContainer.extend({
 Graphic = DisplayObject.extend(
 /** @lends Graphic# */
 {
+	
+	setupDomObject: function(config) {
+		this._super(config);
+		this.repaint(config.html);
+	},
+	
 	/**
 	 * Clear & repaint the component.
 	 * @param {String} html content to be repainted
@@ -16735,6 +16861,7 @@ JOOMenu = JOOMenuItem.extend(
 	},
 	
 	onclick: function() {
+		e.stopPropagation();
 		this.toggleMenuItems();
 	},
 
@@ -16786,10 +16913,17 @@ JOOMenuBar = UIComponent.extend(
 	
 	setupDomObject: function(config) {
 		this._super(config);
-		var _self = this;
-		$(window).bind('click', function() {
-			_self.hideAllMenus();
-		});
+		$(window).bind('click', {_self: this}, this._hideAllMenus);
+	},
+	
+	dispose: function(skipRemove) {
+		$(window).unbind('click', this._hideAllMenus);
+		this._super(skipRemove);
+	},
+	
+	_hideAllMenus: function(e) {
+		var _self = e.data ? e.data._self || this : this;
+		_self.hideAllMenus();
 	},
 
 	/**
@@ -17869,7 +18003,7 @@ JOOText = UIComponent.extend(
 		this._super(config);
 		this.text = new Sketch();
 		if (config.lbl)
-			this.text.access().html(config.lbl);
+			this.setValue(config.lbl);
 
 		if (!config.readonly) {
 			this.addEventListener('dblclick', function() {
@@ -17893,6 +18027,26 @@ JOOText = UIComponent.extend(
 			});
 		}
 		this.addChild(this.text);
+		
+		this.text.addEventListener("stageUpdated", function(){
+			var _div = document.getElementById(this.getId());
+			_div.onfocus = function() {
+			    window.setTimeout(function() {
+			        var sel, range;
+			        if (window.getSelection && document.createRange) {
+			            range = document.createRange();
+			            range.selectNodeContents(_div);
+			            sel = window.getSelection();
+			            sel.removeAllRanges();
+			            sel.addRange(range);
+			        } else if (document.body.createTextRange) {
+			            range = document.body.createTextRange();
+			            range.moveToElementText(_div);
+			            range.select();
+			        }
+			    }, 1);
+			};
+		});
 //		this.attachContextMenu();
 //		var _self = this;
 //		this.getContextMenu().addItem(new JOOMenuItem({label: 'Edit text', command: function() {
@@ -17900,13 +18054,17 @@ JOOText = UIComponent.extend(
 //			_self.getContextMenu().hide();
 //		}}));
 	},
+	
+	setValue: function(lbl) {
+		this.text.access().html(lbl);
+	},
 
 	/**
 	 * Get the value of the text
 	 * @returns {String} the text value
 	 */
 	getValue: function() {
-		return this.config.lbl;
+		return this.text.access().html();
 	},
 
 	/**
@@ -17946,16 +18104,37 @@ JOOVideo = UIComponent.extend(
 	 * Play the video
 	 */
 	play: function() {
-		this.access()[0].play();
+		if(!this._domObject){
+			this._domObject = document.getElementById(this.getId());
+		}
+		if(this._domObject){
+			this._domObject.play();
+		}
+	},
+	
+	stop: function(){
+		if(!this._domObject){
+			this._domObject = document.getElementById(this.getId());
+		}
+		this._domObject.pause();
+		this._domObject.currentTime = 0.0;
+	},
+	
+	pause: function(){
+		if(!this._domObject){
+			this._domObject = document.getElementById(this.getId());
+		}
+		this._domObject.pause();
+		return this._domObject.currentTime;
 	},
 	
 	toHtml: function() {
 		return "<video></video>";
 	},
 	
-	dispose: function(){
-		this.access()[0].pause();
-		this._super();
+	dispose: function(skipRemove){
+		this.stop();
+		this._super(skipRemove);
 	}
 });
 
@@ -18055,6 +18234,8 @@ JOOInput = UIComponent.extend(
 		this._super(config);
 		this.access().val(config.value);
 		this.setAttribute('name', config.name);
+		if (config.placeholder)
+		this.setAttribute('placeholder', config.placeholder);
 	},
 
 	/**
@@ -18062,7 +18243,10 @@ JOOInput = UIComponent.extend(
 	 * @param {Object} value new value
 	 */
 	setValue: function(value) {
-		this.access().val(value);
+		var oldValue = this.access().val();
+		if (oldValue != value) {
+			this.access().val(value).change();
+		}
 	},
 	
 	/**
@@ -18351,6 +18535,9 @@ JOOButton = UIComponent.extend(
 		this.addEventListener('click', function(e) {
 			this.onclick(e);
 		});
+//		this.addEventListener('mousedown', function(e) {
+//			this.access().addClass('focus');
+//		});
 	},
 	
 	toHtml: function()	{
@@ -18641,9 +18828,9 @@ JOOSprite = UIComponent.extend(
 		return "<div></div>";
 	},
 	
-	dispose: function() {
+	dispose: function(skipRemove) {
 		this.stop();
-		this._super();
+		this._super(skipRemove);
 	}
 });
 
@@ -19548,15 +19735,20 @@ SliderIcon = Sketch.extend({
 			this.mouseUpHandler(e);
 		});
 		
-		$(window).bind("mouseup", function(e) {
-			_self.mouseUpHandler(e);
-		});
+		$(window).bind("mouseup", {_self: this}, this.mouseUpHandler);
+	},
+	
+	dispose: function(skipRemove) {
+		$(window).unbind("mouseup", this.mouseUpHandler);
+		$(window).unbind("mousedown", this.mouseDownHandler);
+		this._super(skipRemove);
 	},
 	
 	mouseUpHandler: function(e) {
-		this.enable = false;
-		$(window).unbind("mousemove", this.mouseMoveHandler);
-		this.removeEventListener("mousemove", this.mouseMoveHandler);
+		var _self = e.data ? e.data._self || this : this;
+		_self.enable = false;
+		$(window).unbind("mousemove", _self.mouseMoveHandler);
+		_self.removeEventListener("mousemove", _self.mouseMoveHandler);
 	},
 	
 	mouseMoveHandler: function(e) {
@@ -19591,7 +19783,7 @@ JOOSlider = JOOInput.extend(
 		this.addChild(this.sliderIcon);
 		
 		this.addEventListener('stageUpdated', function() {
-			this.slideTo(this.getValue());
+			this.slideTo(this.value);
 		});
 		
 		var _self = this;
@@ -19622,7 +19814,6 @@ JOOSlider = JOOInput.extend(
 	 * @param {Boolean} ispos whether the <code>value</code> is position or absolute value.
 	 */
 	slideTo: function(value, ispos) {
-		var oldPos = this.sliderIcon.getX();
 		var posX = undefined;
 		if(ispos){
 			// position, not value anymore
@@ -19633,6 +19824,8 @@ JOOSlider = JOOInput.extend(
 				posX = 9;
 			}
 		} else {
+			var oldPos = this.sliderIcon.getX();
+			
 			if (value < this.min) {
 				value = this.min;
 			}
@@ -19640,10 +19833,11 @@ JOOSlider = JOOInput.extend(
 				value = this.max;
 			}
 			posX = (value - this.min) / (this.max - this.min) * (this.getWidth() - 18);
+			
+			if (oldPos == posX) 
+				return;
 		}
 		
-		if (oldPos == posX) 
-			return;
 		this.sliderIcon.setX(posX);
 		
 		var rate = (value - this.min) / (this.max - this.min);
@@ -19952,8 +20146,8 @@ JOOPropertiesDialog = JOODialog.extend({
 		this._super(config);
 		this.setTitle('Properties');
 		this.getContentPane().setLayout('vertical');
-		this.supportedProperties = this.supportedProperties || [];
-		this.propertyMappings = this.propertyMappings || {
+		this.supportedProperties = config.supportedProperties || this.supportedProperties || [];
+		this.propertyMappings = config.propertyMappings || this.propertyMappings || {
 			'colorpicker': JOOColorProperty,
 			'media': JOOMediaProperty,
 			'slider': JOOSliderProperty,
@@ -20785,7 +20979,7 @@ JOOMovieClip = JOOSprite.extend({
 		for(var i in objDef.attributes){
 			obj.setAttribute(i,objDef.attributes[i]);
 		}
-		obj.setStyle("display","none");
+//		obj.setStyle("display","none");
 		if(!obj.getStyle("position")){ obj.setStyle("position","absolute"); }
 		if (objDef.type == "composition") {
 			//obj.setLayout('absolute');
@@ -21129,55 +21323,61 @@ JOOService = EventDispatcher.extend({
  */
 JOOModel = EventDispatcher.extend({
 	
-	bindings: function(obj) {
+	bindings: function(obj, path) {
+		path = path || "";
 		obj = obj || this;
 		for(var i in obj) {
-			this._bindings(obj, i);
+			this._bindings(obj, i, path);
 		}
 	},
 	
-	_bindings: function(obj, i) {
-		if (i == 'className' || i == 'ancestors' || i == 'listeners') 
+	_bindings: function(obj, i, path) {
+		if (i == 'className' || i == 'ancestors' || i == 'listeners' || i =='_bindingName_') 
 			return;
+		if (path == "") {
+			path = i;
+		} else {
+			path += "['"+i+"']";
+		}
 		if (typeof obj[i] != 'function') {
 			if (obj[i] instanceof Object || obj[i] instanceof Array ) {
 				if (obj[i] instanceof Array) {
-					this.bindForArray(obj[i]);
+					this.bindForArray(obj[i], path);
 				}
-				this.bindings(obj[i]); //recursively bind
+				this.bindings(obj[i], path); //recursively bind
 			}
-			this.bindForValue(obj, i);
+			this.bindForValue(obj, i, path);
 		}
 	},
 	
-	bindForArray: function(obj) {
+	bindForArray: function(obj, path) {
 		var _self = this;
 	    var length = obj.length;
 	    obj.__defineGetter__("length", function() {
 			return length;
 		});
-	    this.hookUp(obj, 'push', function(item) {
-	    	_self._bindings(obj, obj.length-1);
+	    this.hookUp(obj, 'push', path, function(item) {
+	    	_self._bindings(obj, obj.length-1, path);
 	    });
-	    this.hookUp(obj, 'pop');
-	    this.hookUp(obj, 'splice', function() {
+	    this.hookUp(obj, 'pop', path);
+	    this.hookUp(obj, 'splice', path, function() {
 	    	for(var i=2; i<arguments.length; i++) {
-	    		_self._bindings(obj, obj.length-arguments.length-i);
+	    		_self._bindings(obj, obj.length-arguments.length-i, path);
 	    	}
 	    });
 	},
 	
-	hookUp: function(obj, fn, callback) {
+	hookUp: function(obj, fn, path, callback) {
 		var _self = this;
 		var orig = obj[fn];
 	    obj[fn] = function() {
 	    	orig.apply(obj, arguments);
 	    	callback.apply(undefined, arguments);
-	    	_self.dispatchEvent('change');
+	    	_self.dispatchEvent('change', {type: 'function', functionName: fn, arguments: arguments, path: path});
 	    };
 	},
 	
-	bindForValue: function(obj, i) {
+	bindForValue: function(obj, i, path) {
 		var _self = this;
 		var prop = "_"+i;
 		obj[prop] = obj[i];
@@ -21186,13 +21386,16 @@ JOOModel = EventDispatcher.extend({
 		
 		if (!obj.__lookupGetter__(i)) {
 			obj.__defineGetter__(i, function() {
-		        return obj[prop];
+		        return obj[prop];prop
 		    });
 		}
 		if (!obj.__lookupSetter__(i)) {
 			obj.__defineSetter__(i, function(val) {
-		        obj[prop] = val;
-		        _self.dispatchEvent('change');
+				var oldValue = obj[prop];
+				if (oldValue != val) {
+					obj[prop] = val;
+					_self.dispatchEvent('change', {type: 'setter', value: val, prop: i, path: path});
+				}
 		    });
 		}
 	}
@@ -22961,6 +23164,27 @@ function getPositionFromRotatedCoordinate(pos, angle, coef) { // angle in radian
 
 ExpressionUtils = {
 		
+	express: function(obj, expression) {
+		var s = "obj."+expression;
+		try {
+			return eval(s);
+		} catch (err) {
+			log("Expression failed: "+err);
+		}
+	},
+	
+	expressSetter: function(obj, expression, value) {
+		if (typeof value == 'string') {
+			value = value.replace(/'/g, "\\'")
+		}
+		var s = "obj."+expression+" = '"+value+"'";
+		try {
+			eval(s);
+		} catch (err) {
+			log("Expression failed: "+err);
+		}
+	},
+		
 	getMutatorMethod: function(obj, prop) {
 		var methodName = "set"+prop.substr(0, 1).toUpperCase()+prop.substr(1);
 		return obj[methodName];
@@ -22991,8 +23215,8 @@ JOOUtils = {
 		return SingletonFactory.getInstance(Application).getResourceManager();
 	},
 	
-	access: function(name, type, resourceLocator) {
-		return SingletonFactory.getInstance(Application).getResourceManager().requestForResource(type, name, resourceLocator, true);
+	access: function(name, type, resourceLocator, cached) {
+		return SingletonFactory.getInstance(Application).getResourceManager().requestForResource(type, name, resourceLocator, cached);
 	},
 	
 	accessCustom: function(custom, resourceLocator) {

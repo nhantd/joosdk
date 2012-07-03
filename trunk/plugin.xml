@@ -61,8 +61,68 @@
                class="org.jooframework.sdk.eclipse.popup.actions.ProjectBuilder"
                menubarPath="joosdk_ctxmenu.menu1/group1"
                enablesFor="1"
-               id="joosdk_ctxmenu.buildAction">
+               id="joosdk_ctxmenu.buildAction"
+               >
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IProject"
+            nameFilter="*"
+            id="joosdk_ctxmenu.toggleNature">
+           <menu
+               label="Joo SDK"
+               path="additions"
+               id="joosdk_ctxmenu.menu1">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               label="Add JOO Nature"
+               class="org.jooframework.sdk.eclipse.AddJOONature"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="+"
+               id="joosdk.addNatureAction">
+         </action>
+      </objectContribution>
+   </extension>
+<!--   <extension point="org.eclipse.ui.commands">
+   		<category
+            name="Joo Framework SDK"
+            id="joosdk" />
+		<command id="joosdk_ctxmenu.buildCommand"
+			name="Build Project"
+			categoryId="joosdk"/>
+	</extension>
+
+   <extension point="org.eclipse.ui.bindings">
+		<key sequence="Ctrl+Shift+X"
+			commandId="joosdk_ctxmenu.buildCommand"
+			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+		/>
+	</extension>-->
+	<extension
+         id="jooBuilder"
+         name="JOO Builder"
+         point="org.eclipse.core.resources.builders">
+      <builder hasNature="true">
+         <run
+               class="org.jooframework.sdk.eclipse.JOOBuilder">
+         </run>
+      </builder>
+   </extension>
+	<extension
+         id="jooNature"
+         name="JOO Project Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="org.jooframework.sdk.eclipse.JOONature">
+         </run>
+      </runtime>
+      <builder
+            id="org.jooframework.sdk.jooBuilder">
+      </builder>
    </extension>
 </plugin>
