@@ -102,8 +102,8 @@ public class JooSDK {
 		final IFolder jsFwFolder = container.getFolder(new Path("static/framework/js"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/framework/js/joo-2.0.3r7.js"),
-				getResource("/templates/joo-2.0.3r7.js"), monitor);
+		addFileToProject(container, new Path("static/framework/js/joo-2.0.3r14.js"),
+				getResource("/templates/joo-2.0.3r14.js"), monitor);
 		addFileToProject(container, new Path("static/framework/js/class-name-injection.js"),
 				getResource("/templates/class-name-injection.js"), monitor);
 		
@@ -156,11 +156,11 @@ public class JooSDK {
 //		distDefaultFolder.create(true, true, monitor);
 		/* Pre-built files */
 		addFileToProject(container, new Path("dist/all.css"),
-				getResource("/templates/build/all.default.css"), monitor);
+				getResource("/templates/build/all.css"), monitor);
 		addFileToProject(container, new Path("dist/all.js"),
-				getResource("/templates/build/all.default.js"), monitor);
+				getResource("/templates/build/all.js"), monitor);
 		addFileToProject(container, new Path("dist/all.txt"),
-				getResource("/templates/build/all.default.txt"), monitor);
+				getResource("/templates/build/all.txt"), monitor);
 	}
 	
 	private static InputStream getResource(String string) {
@@ -246,7 +246,6 @@ public class JooSDK {
 			if (!version.isEmpty()) {
 				if (version.lastIndexOf('.') == version.length() - 1) {
 					version = version.substring(0, version.length()-1);
-					System.out.println(version);
 				}
 				IFolder distVersionedFolder = parent.getFolder(new Path("dist/"+version));
 				if (!distVersionedFolder.exists())
