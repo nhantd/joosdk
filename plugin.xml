@@ -82,7 +82,7 @@
                label="Add JOO Nature"
                class="org.jooframework.sdk.eclipse.AddJOONature"
                menubarPath="joosdk_ctxmenu.menu1/group1"
-               enablesFor="+"
+               enablesFor="1"
                id="joosdk.addNatureAction">
          </action>
       </objectContribution>
