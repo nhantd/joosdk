@@ -131,7 +131,7 @@ public class JooSDK {
 		
 		/* Add the development main page file */
 		addFileToProject(container, new Path("index.copy.html"),
-				getResource("/templates/index.default.copy.html"), monitor);
+				getResource("/templates/index.copy.html"), monitor);
 
 		/* Add the production main page file */
 		addFileToProject(container, new Path("index.html"),
@@ -244,6 +244,10 @@ public class JooSDK {
 				distFolder.create(true, true, null);
 			}
 			if (!version.isEmpty()) {
+				if (version.lastIndexOf('.') == version.length() - 1) {
+					version = version.substring(0, version.length()-1);
+					System.out.println(version);
+				}
 				IFolder distVersionedFolder = parent.getFolder(new Path("dist/"+version));
 				if (!distVersionedFolder.exists())
 					distVersionedFolder.create(true, true, null);
@@ -286,6 +290,10 @@ public class JooSDK {
 			for(String src: srcArray) {
 				if (src.indexOf("static/app/js/portlets/") != -1) {
 					src = src.replaceFirst("static/app/js/portlets/", "static/app/microtemplating/"+version);
+					src = src.replaceFirst(".js", ".htm");
+					htmlArray.add(src);
+				} else if (src.indexOf("static/app/js/views/") != -1) {
+					src = src.replaceFirst("static/app/js/views/", "static/app/microtemplating/views/"+version);
 					src = src.replaceFirst(".js", ".htm");
 					htmlArray.add(src);
 				}
