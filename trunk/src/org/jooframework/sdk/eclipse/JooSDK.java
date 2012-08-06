@@ -102,8 +102,8 @@ public class JooSDK {
 		final IFolder jsFwFolder = container.getFolder(new Path("static/framework/js"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/framework/js/joo-2.0.3r14.js"),
-				getResource("/templates/joo-2.0.3r14.js"), monitor);
+		addFileToProject(container, new Path("static/framework/js/joo-2.0.3r32.js"),
+				getResource("/templates/joo-2.0.3r32.js"), monitor);
 		addFileToProject(container, new Path("static/framework/js/class-name-injection.js"),
 				getResource("/templates/class-name-injection.js"), monitor);
 		
@@ -213,10 +213,32 @@ public class JooSDK {
 					String fname = file.getName();
 					if (fname.startsWith("index.") && fname.endsWith(".copy.html")) {
 						buildFile(file);
+					} else if (fname.equalsIgnoreCase("joo-build.xml")) {
+						readAndBuild(file);
 					}
 				}
 			}
 		} catch (CoreException e) {
+			
+		}
+	}
+	
+	private static void readAndBuild(IFile file) {
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = dbf.newDocumentBuilder();
+			InputSource is = new InputSource(new StringReader(getFileContent(file)));
+			Document doc = builder.parse(is);
+			
+			IContainer parent = file.getParent();
+			NodeList nl = doc.getElementsByTagName("build-script");
+			for(int i=0;i<nl.getLength();i++) {
+				Node n = nl.item(i);
+				String href = extractAttribute(n, "href");
+				IFile buildFile = parent.getFile(new Path(href));
+				buildFile(buildFile);
+			}
+		} catch (Exception ex) {
 			
 		}
 	}
@@ -302,6 +324,7 @@ public class JooSDK {
 			}
 			writeFile(file.getParent(), "dist/"+version+"all.txt", sb.toString());
 		} catch (Exception ex) {
+			
 		}
 	}
 
