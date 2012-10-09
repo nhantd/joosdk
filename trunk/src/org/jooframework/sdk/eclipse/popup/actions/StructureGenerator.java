@@ -1,6 +1,6 @@
 package org.jooframework.sdk.eclipse.popup.actions;
 
-import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -17,7 +17,7 @@ public class StructureGenerator implements IObjectActionDelegate {
 
 	private Shell shell;
 	private IWorkbenchPart part;
-	private IFolder folder;
+	private IContainer folder;
 	
 	/**
 	 * Constructor for Action1.
@@ -39,7 +39,7 @@ public class StructureGenerator implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 		IStructuredSelection selection = (IStructuredSelection) part.getSite().getSelectionProvider().getSelection();
-		folder = (IFolder)selection.getFirstElement();
+		folder = (IContainer)selection.getFirstElement();
 		
 		Job job = new Job("Generate Joo default structure") {
 			@Override
