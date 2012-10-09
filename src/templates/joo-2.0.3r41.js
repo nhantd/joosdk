@@ -11546,43 +11546,6 @@ function is_array(input){
     return Class;
   };
 })();
-//micro template based on John Resg code
-function tmpl(tmpl_id,data){
-	try {
-		if ( typeof tmpl.cache == 'undefined' ) {
-			tmpl.cache = new Array();
-	    }
-		if( tmpl.cache[tmpl_id]!=null ){
-			var fn = tmpl.cache[tmpl_id];
-			return fn(data);		
-		}
-		str = document.getElementById(tmpl_id).innerHTML;
-		str = str.replace(/\\/g, "@SPC@");
-		str = str.replace(/'/g, "&apos;");
-		fnStr = "var p=[],print=function(){p.push.apply(p,arguments);};" +
-	    
-	    // Introduce the data as local variables using with(){}
-	    "with(obj){p.push('" +
-	    
-	    // Convert the template into pure JavaScript
-	    str
-	      .replace(/[\r\t\n]/g, " ")
-	      .split("<%").join("\t")
-	      .replace(/((^|%>)[^\t]*)'/g, "$1\r")
-	      .replace(/\t=(.*?)%>/g, "',$1,'")
-	      .split("\t").join("');")
-	      .split("%>").join("p.push('")
-	      .split("\r").join("\\'")
-	  + "');}return p.join('');";
-		fnStr = fnStr.replace(/@SPC@/g, "\\");
-		var fn = new Function("obj", fnStr);
-		tmpl.cache[tmpl_id] = fn;
-		return fn(data);
-	} catch (e) {
-		log(e+":"+tmpl_id, 'rendering');
-		return "";
-	}
-}
 SystemProperty = Class.extend(
 /** @lends SystemProperty# */
 {
@@ -12098,6 +12061,9 @@ JOOKeyBindings = Class.extend({
 	},
 	
 	_toKeyCode: function(key) {
+		var r = key.match(/{(.*)}/);
+		if (r && r.length >= 2)
+			return parseInt(r[1]);
 		return key.toUpperCase().charCodeAt(0);
 	},
 	
@@ -12273,7 +12239,7 @@ CompositionRenderInterface = InterfaceImplementor.extend({
 		 */
 		obj.prototype.renderUIComposition = obj.prototype.renderUIComposition || function() {
 			var model = this.config.model || {};
-			var composition = $(tmpl(this.className+"View", model));
+			var composition = $(JOOUtils.tmpl(this.className+"View", model));
 			_self.processElement(this, this, composition[0], model);
 		};
 		
@@ -12424,13 +12390,26 @@ CompositionRenderInterface = InterfaceImplementor.extend({
 		
 		for(var i in handlers) {
 			(function(i) {
-				currentObject.addEventListener(i, function(event) {
-					try {
-						handlers[i].apply(root, arguments);
-					} catch (err) {
-						log(err);
-					}
-				});
+				if (i.indexOf('touch') != -1) {	//in some platforms such as iOS, binding touch events won't take effect
+													//if elements not existed in DOM
+					currentObject.addEventListener('stageUpdated', function() {
+						currentObject.addEventListener(i, function(event) {
+							try {
+								handlers[i].apply(root, arguments);
+							} catch (err) {
+								log(err);
+							}
+						});
+					});
+				} else {
+					currentObject.addEventListener(i, function(event) {
+						try {
+							handlers[i].apply(root, arguments);
+						} catch (err) {
+							log(err);
+						}
+					});
+				}
 			})(i);
 		}
 		
@@ -12767,6 +12746,8 @@ DisplayObject = EventDispatcher.extend(
 	},
 	
 	dispatchEvent: function(event, eventData) {
+	    if (!InteractionControlHelper.getInteractionAbility(event))
+	        return;
 		if (!eventData) eventData = {};
 		if (typeof eventData['stopPropagation'] == 'undefined') {
 			eventData.stopPropagation = function() {
@@ -13097,6 +13078,8 @@ DisplayObject = EventDispatcher.extend(
 	 * @param {Boolean} silent whether event is omitted or dispatched
 	 */
 	setStyle: function(k, v, silent) {
+		if (this.dead) 
+			return;
 		if (silent)
 			this.access().silentCss(k, v);
 		else
@@ -13216,6 +13199,8 @@ DisplayObject = EventDispatcher.extend(
 	 * @private
 	 */
 	dispose: function(skipRemove) {
+		if (this.dead) 
+			return;
 		this.dispatchEvent('dispose');
 		
 		if (!skipRemove) {
@@ -13327,11 +13312,13 @@ DisplayObjectContainer = DisplayObject.extend(
 		switch (option) {
 			case 'topLeft':{
 				this.setStyle('-webkit-transform-origin', '0 0');
+				this.setStyle('-moz-transform-origin', '0 0');
 				this.setLocation(this.getX() + deltaX, this.getY() + deltaY);
 				break;
 			}
 			case 'center': {
 				this.setStyle('-webkit-transform-origin', "50% 50%");
+				this.setStyle('-moz-transform-origin', "50% 50%");
 				this.setLocation(this.getX() - deltaX, this.getY() - deltaY);
 				break;
 			}
@@ -13518,6 +13505,8 @@ DisplayObjectContainer = DisplayObject.extend(
 	},
 	
 	dispose: function(skipRemove) {
+	    if (this.dead)
+	        return;
 		for(var i=0;i<this.children.length;i++) {
 			this.children[i].dispose(true);
 		}
@@ -13680,7 +13669,7 @@ UIRenderInterface = InterfaceImplementor.extend({
 	
 	implement: function(obj) {
 		obj.prototype.render = obj.prototype.render || function() {
-			tmpl('UI-'+obj.className, obj.config);
+			JOOUtils.tmpl('UI-'+obj.className, obj.config);
 		};
 	}
 });
@@ -14556,6 +14545,23 @@ JOOForm = Sketch.extend(
 //		return container;
 //	}
 //});
+
+InteractionControlHelper = {
+	
+	setDisableList: function(list) {
+		this.list = list;
+	},
+	
+    setInteractionAbility: function(enable) {
+        this.disable = !enable;
+    },
+    
+    getInteractionAbility: function(event) {
+    	if (!this.list)
+    		return !this.disable;
+    	return (!this.disable || !this.list[event]);
+    }
+};
 /**
  * @class An interface which allows UI Component to be selectable.
  * @interface
@@ -15608,8 +15614,10 @@ JOOVideo = UIComponent.extend(
 	},
 	
 	dispose: function(skipRemove){
-		this.stop();
-		this._super(skipRemove);
+		try {
+			this.stop();
+			this._super(skipRemove);
+		} catch (err) {}
 	}
 });
 
@@ -16261,7 +16269,7 @@ JOOSprite = UIComponent.extend(
 		this.startFrame = start || 0;
 		this.endFrame = end;
 		if(end == undefined){
-			this.endFrame = this.verticalFramesNo * this.horizontalFramesNo; 
+			this.endFrame = this.verticalFramesNo * this.horizontalFramesNo - 1; 
 		} 
 		this.currentFrame = this.startFrame;
 		
@@ -16341,14 +16349,14 @@ JOOSprite = UIComponent.extend(
 	 * @param frame
 	 */
 	onFrame: function(frame) {
-		var x = frame % this.horizontalFramesNo;
-		var y = 0;
-		if (this.currentFrame != 0)
-			Math.ceil(frame / this.horizontalFramesNo);
-		var xPos = -x*this.spriteWidth+"px";
-		var yPos = -y*this.spriteHeight+"px";
-		this.access().css('background-position', xPos+' '+yPos);
-	},
+  		var x = frame % this.horizontalFramesNo;
+  		var y = 0;
+  		if (this.currentFrame != 0)
+   			y = Math.floor(frame / this.horizontalFramesNo);
+  		var xPos = -y*this.spriteWidth+"px";
+  		var yPos = -x*this.spriteHeight+"px";
+  		this.access().css('background-position', xPos+' '+yPos);
+ 	},
 	
 	toHtml: function() {
 		return "<div></div>";
@@ -17906,7 +17914,9 @@ JOOPropertiesDialog = JOODialog.extend({
 	
 	removeTarget: function(target) {
 		if (target != undefined) {
-			target.removeEventListener(this.onTargetStyle);
+			target.removeEventListener('stylechange',this.onTargetStyle);
+			target._parent.removeEventListener('stylechange',this.onTargetStyle);
+			target._parent.removeEventListener('dragstop',this.onTargetStyle);
 		}
 		if (this.target == target) {
 			this.target = undefined;
@@ -17916,7 +17926,9 @@ JOOPropertiesDialog = JOODialog.extend({
 	
 	setTarget: function(target) {
 		if (this.target != undefined) {
-			this.target.removeEventListener(this.onTargetStyle); 
+			this.target.removeEventListener('stylechange',this.onTargetStyle);
+			this.target._parent.removeEventListener('stylechange',this.onTargetStyle);
+			this.target._parent.removeEventListener('dragstop',this.onTargetStyle);
 		}
 		if (this.target != target) {
 			if(this.target){
@@ -18759,7 +18771,7 @@ JOOMovieClip = JOOSprite.extend({
 		for(var i in objDef.attributes){
 			obj.setAttribute(i,objDef.attributes[i]);
 		}
-		obj.setStyle("display","none");
+		obj.setStyle("display", "none");
 		if(!obj.getStyle("position")){ obj.setStyle("position","absolute"); }
 		if (objDef.type == "composition") {
 			//obj.setLayout('absolute');
@@ -18790,7 +18802,7 @@ JOOMovieClip = JOOSprite.extend({
 			this.animations[delay] = this.animations[delay] || new Array();
 			this.animations[delay].push(this.data.animations[i]);
 		}
-		this.horizontalFramesNo = this.data.frames;
+		this.horizontalFramesNo = this.data.frames + 1;
 		this.verticalFramesNo = 1;
 	},
 	
@@ -18803,35 +18815,9 @@ JOOMovieClip = JOOSprite.extend({
 		}
 	},
 	
-//	pause: function() {
-//		this._stripOldAnimationsMeta();
-//		for (var i in this.animationsMeta) {
-//			var meta = this.animationsMeta[i];
-//			meta.object.setCSS3Style('transition-duration', '');
-//			var styles = meta.object.getAttribute('style').split(';');
-//			for(var j in styles) {
-//				var kv = styles[j].split(':');
-//				if (kv && kv.length == 2) {
-//					console.log();
-//					if (kv[0].indexOf('transition') == -1) {
-//						meta.object.setStyle(kv[0], meta.object.getStyle(kv[0]));
-//					}
-//				}
-//			}
-//		}
-//		this._super();
-//	},
-	
 	play: function() {
-		if (this.played) {
-			this._super();
-			return;
-		}
-		var _self = this;
-		setTimeout(function() {
-			_self.played = true;
-			_self.play();
-		}, 10);
+		this.played = true;
+		this._super();
 	},
 	
 	onFrame: function(frame) {
@@ -18844,10 +18830,6 @@ JOOMovieClip = JOOSprite.extend({
 					this.playAnimation(animations[i], 0);
 			}
 		}
-		//for(var i in this.animations) {
-			//var animation = this.animations[i];
-			//this.playAnimation(animation, 0);
-		//}
 	},
 	
 	callScript: function(animation) {
@@ -18876,8 +18858,7 @@ JOOMovieClip = JOOSprite.extend({
 			obj = obj.children[objRef[i]];
 		}
 		var actions = this.actions[animation.action_ref];
-		var _self = this;
-		obj.setCSS3Style('transition-timing-function', 'linear');
+//		obj.setCSS3Style('transition-timing-function', 'linear');
 		this.animationsMeta.push(new JOOAnimationData({
 			object: obj,
 			delay: animation.delay,
@@ -18885,31 +18866,22 @@ JOOMovieClip = JOOSprite.extend({
 			end: actions.end, 
 			duration: actions.duration
 		}));
-		_self.doPlayAnimation([obj, actions, time, animation]);
-		
-		//setTimeout(function(args) {
-			//_self.doPlayAnimation(args);
-			// var i = setInterval(function(args) {
-			// 	_self.doPlayAnimation(args);
-			// }, args[1].interval, args);
-			// _self.intervals.push(i);
-		//}, animation.delay, [obj, actions, time, animation]);
+		this.doPlayAnimation([obj, actions, time, animation]);
 	},
 	
 	doPlayAnimation: function(args) {
 		var _obj = args[0];
 		var _actions = args[1];
-		_obj.setCSS3Style('transition-property', '');
-		_obj.setCSS3Style('transition-duration', '');
+//		_obj.setCSS3Style('transition-property', '');
+//		_obj.setCSS3Style('transition-duration', '');
 		var keys = this.setStyles(_obj, _actions.start);
-		_obj.getStyle('-webkit-transform');
-		
-		var duration = _actions.duration / this.framerate * 1000;
-		_obj.setCSS3Style('transition-duration', duration+'ms');
-		_obj.setCSS3Style('transition-property', keys.join(','));
-		//console.log(_obj.className,JSON.stringify(_obj.getStyle('-webkit-transition-duration')));
-		
-		this.setStyles(_obj, _actions.end);
+//		_obj.getStyle('-webkit-transform');
+//		
+//		var duration = _actions.duration / this.framerate * 1000;
+//		_obj.setCSS3Style('transition-duration', duration+'ms');
+//		_obj.setCSS3Style('transition-property', keys.join(','));
+//		
+//		this.setStyles(_obj, _actions.end);
 	},
 	
 	setStyles: function(obj, actions) {
@@ -18946,12 +18918,20 @@ JOOSpriteAnimation = UIComponent.extend({
 		this.addChild(this.sprite);
 		var _self = this;
 		setTimeout(function(){
-			_self.sprite.play(config.startFrame,config.endFrame);
-		},300);
+			_self.sprite.play(config.startFrame, config.endFrame);
+		}, 300);
 	},
 	
 	toHtml: function() {
 		return "<div></div>";
+	}
+});
+
+JOOKeyframeAnimationEngine = Class.extend({
+	
+	init: function(config) {
+		this.obj = config.obj;
+		this.animation = config.animation;
 	}
 });
 /**
@@ -19147,10 +19127,10 @@ JOOModel = EventDispatcher.extend({
 	
 	bindForArray: function(obj, path) {
 		var _self = this;
-	    var length = obj.length;
-	    obj.__defineGetter__("length", function() {
-			return length;
-		});
+//	    var length = obj.length;
+//	    obj.__defineGetter__("length", function() {
+//			return length;
+//		});
 	    this.hookUp(obj, 'push', path, function(item) {
 	    	_self._bindings(obj, obj.length-1, path);
 	    });
@@ -19181,19 +19161,35 @@ JOOModel = EventDispatcher.extend({
 		
 		obj.__path__ = path;
 		
-		if (!obj.__lookupGetter__(i)) {
-			obj.__defineGetter__(i, function() {
-		        return obj[prop];
-		    });
-		}
-		if (!obj.__lookupSetter__(i)) {
-			obj.__defineSetter__(i, function(val) {
-				var oldValue = obj[prop];
-				if (oldValue != val) {
-					obj[prop] = val;
-					_self.dispatchEvent('change', {type: 'setter', value: val, prop: i, path: path});
+		if (obj['__lookupGetter__']) {
+			if (!obj.__lookupGetter__(i)) {
+				obj.__defineGetter__(i, function() {
+			        return obj[prop];
+			    });
+			}
+			if (!obj.__lookupSetter__(i)) {
+				obj.__defineSetter__(i, function(val) {
+					var oldValue = obj[prop];
+					if (oldValue != val) {
+						obj[prop] = val;
+						_self.dispatchEvent('change', {type: 'setter', value: val, prop: i, path: path});
+					}
+			    });
+			}
+		} else {
+			Object.defineProperty(obj, i , {
+				get: function() {
+					return obj[prop];
+				},
+				
+				set: function(val) {
+					var oldValue = obj[prop];
+					if (oldValue != val) {
+						obj[prop] = val;
+						_self.dispatchEvent('change', {type: 'setter', value: val, prop: i, path: path});
+					}
 				}
-		    });
+			});
 		}
 	}
 });
@@ -20053,7 +20049,7 @@ RenderInterface = InterfaceImplementor.extend({
 //			if(this.viewId == undefined || this.model == undefined){
 //				throw "No viewId or model for rendering";
 //			}
-			return tmpl(this.viewId, this.model);
+			return JOOUtils.tmpl(this.viewId, this.model);
 		};
 
 		/**
@@ -20079,7 +20075,7 @@ RenderInterface = InterfaceImplementor.extend({
 		 * @returns {String} the rendered view of the component
 		 */
 		obj.prototype.renderView = obj.prototype.renderView || function(view, model)	{
-			return tmpl((this.viewId || this.getName())+"-"+view, model);
+			return JOOUtils.tmpl((this.viewId || this.getName())+"-"+view, model);
 		};
 		
 		/**
@@ -21059,6 +21055,44 @@ JOOUtils = {
 		reader.onload = callback;
 		reader.readAsDataURL(file);
 	},
+	
+	//micro template based on John Resg code
+	tmpl: function (tmpl_id,data) {
+		try {
+			if ( typeof JOOUtils.tmpl.cache == 'undefined' ) {
+				JOOUtils.tmpl.cache = new Array();
+		    }
+			if( JOOUtils.tmpl.cache[tmpl_id]!=null ){
+				var fn = JOOUtils.tmpl.cache[tmpl_id];
+				return fn(data);
+			}
+			str = document.getElementById(tmpl_id).innerHTML;
+			str = str.replace(/\\/g, "@SPC@");
+			str = str.replace(/'/g, "&apos;");
+			fnStr = "var p=[],print=function(){p.push.apply(p,arguments);};" +
+		    
+		    // Introduce the data as local variables using with(){}
+		    "with(obj){p.push('" +
+		    
+		    // Convert the template into pure JavaScript
+		    str
+		      .replace(/[\r\t\n]/g, " ")
+		      .split("<%").join("\t")
+		      .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+		      .replace(/\t=(.*?)%>/g, "',$1,'")
+		      .split("\t").join("');")
+		      .split("%>").join("p.push('")
+		      .split("\r").join("\\'")
+		  + "');}return p.join('');";
+			fnStr = fnStr.replace(/@SPC@/g, "\\");
+			var fn = new Function("obj", fnStr);
+			JOOUtils.tmpl.cache[tmpl_id] = fn;
+			return fn(data);
+		} catch (e) {
+			log(e+":"+tmpl_id, 'rendering');
+			return "";
+		}
+	}
 };
 Memcached = Class.extend(
 /** @lends Memcached# */		

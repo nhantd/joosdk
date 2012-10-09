@@ -102,8 +102,8 @@ public class JooSDK {
 		final IFolder jsFwFolder = container.getFolder(new Path("static/framework/js"));
 		jsFwFolder.create(true, true, monitor);
 		
-		addFileToProject(container, new Path("static/framework/js/joo-2.0.3r32.js"),
-				getResource("/templates/joo-2.0.3r32.js"), monitor);
+		addFileToProject(container, new Path("static/framework/js/joo-2.0.3r41.js"),
+				getResource("/templates/joo-2.0.3r41.js"), monitor);
 		addFileToProject(container, new Path("static/framework/js/class-name-injection.js"),
 				getResource("/templates/class-name-injection.js"), monitor);
 		
