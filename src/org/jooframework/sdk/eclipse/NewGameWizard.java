@@ -27,7 +27,7 @@ import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
 import org.eclipse.ui.wizards.newresource.BasicNewProjectResourceWizard;
 
-public class NewProjectWizard extends Wizard implements IExecutableExtension,
+public class NewGameWizard extends Wizard implements IExecutableExtension,
 		INewWizard {
 
 	private WizardNewProjectCreationPage wizardPage;
@@ -112,9 +112,9 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 		 * Unlike the custom new wizard, we just add the pre-defined one and
 		 * don't necessarily define our own.
 		 */
-		wizardPage = new WizardNewProjectCreationPage("NewJooProjectWizard");
-		wizardPage.setDescription("Create a new Joo Project.");
-		wizardPage.setTitle("New Joo Project");
+		wizardPage = new WizardNewProjectCreationPage("NewJooGameWizard");
+		wizardPage.setDescription("Create a new Joo Game Project.");
+		wizardPage.setTitle("New Joo Game Project");
 		addPage(wizardPage);
 	}
 
@@ -166,7 +166,7 @@ public class NewProjectWizard extends Wizard implements IExecutableExtension,
 	}
 	
     private void addFiles(IContainer container, IProgressMonitor monitor) throws CoreException, IOException {
-    	JooSDK.createDefaultStructure(container, monitor);
+    	JooSDK.createGameStructure(container, monitor);
 	}
 
 }
