@@ -17,6 +17,21 @@
       </wizard>
    </extension>
    <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            name="JOO Game Project"
+            id="joosdk">
+      </category>
+      <wizard
+            category="joosdk"
+            class="org.jooframework.sdk.eclipse.NewGameWizard"
+            icon="icons/sample.gif"
+            id="org.jooframework.sdk.eclipse.NewGameWizard"
+            name="Joo Game Project"
+            project="true">
+      </wizard>
+   </extension>
+   <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             objectClass="org.eclipse.core.resources.IContainer"
@@ -43,6 +58,20 @@
                enablesFor="1"
                id="joosdk_ctxmenu.buildFolderAction">
          </action>
+         <action
+               label="Update JOO components"
+               class="org.jooframework.sdk.eclipse.popup.actions.UpdateComponents"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.updateAction">
+         </action>
+         <action
+               label="Update CAT components"
+               class="org.jooframework.sdk.eclipse.popup.actions.CatComponents"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.updateCatAction">
+         </action>
       </objectContribution>
       <objectContribution
             objectClass="org.eclipse.core.resources.IFile"
@@ -63,6 +92,20 @@
                enablesFor="1"
                id="joosdk_ctxmenu.buildAction"
                >
+         </action>
+         <action
+               label="Update JOO components"
+               class="org.jooframework.sdk.eclipse.popup.actions.UpdateComponents"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.updateAction">
+         </action>
+         <action
+               label="Update CAT components"
+               class="org.jooframework.sdk.eclipse.popup.actions.CatComponents"
+               menubarPath="joosdk_ctxmenu.menu1/group1"
+               enablesFor="1"
+               id="joosdk_ctxmenu.updateCatAction">
          </action>
       </objectContribution>
       <objectContribution

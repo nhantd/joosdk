@@ -1,0 +1,11 @@
+body {
+	overflow: hidden;
+	padding: 0;
+	margin: 0;
+}
+
+#Application-Main {
+	width: 1024px;
+	height: 768px;
+	position: relative;
+}
