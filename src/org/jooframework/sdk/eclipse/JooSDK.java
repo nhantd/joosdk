@@ -19,6 +19,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -35,6 +38,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.equinox.security.storage.ISecurePreferences;
+import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
+import org.jooframework.sdk.eclipse.popup.CredentialsDialog;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -311,86 +323,84 @@ public class JooSDK {
 		}
 	}
 	
-	private static void updateCatFile(IFile file) {
-		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = dbf.newDocumentBuilder();
-			InputSource is = new InputSource(new StringReader(
-					getFileContent(file)));
-			Document doc = builder.parse(is);
-
-			IContainer parent = file.getParent();
-			IFolder compsFolder = parent.getFolder(new Path("cats"));
-			if (!compsFolder.exists())
-				compsFolder.create(true, true, null);
-
-			// logging in Cerberus
-			CloseableHttpClient client = HttpClients.createDefault();
-			HttpGet get = new HttpGet(
-					url
-							+ "demo/cerberus/service/index/login?email=catexport@terrabook.vn&password=catexport@2013");
-			CloseableHttpResponse res = client.execute(get);
-			res.close();
-
-			NodeList nl = doc.getElementsByTagName("script");
-			for (int i = 0; i < nl.getLength(); i++) {
-				Node n = nl.item(i);
-				String bundle = extractAttribute(n, "bundle-id");
-				String type = extractAttribute(n, "type");
-				String base = extractAttribute(n, "base");
-				String resizeStr = extractAttribute(n, "resize");
-				int resize = 100;
-				if (resizeStr != null && !resizeStr.isEmpty()) {
-					try {
-						resize = Integer.parseInt(resizeStr);
-					} catch (Exception ex) {
-						
-					}
-				}
-					
-				if (bundle == null) continue;
-				
-				if (base == null || base.isEmpty()) base = "cats";
-				
-				if (type.equals("cat/comp")) {
-					// create folder for corresponding bundle
-					IFolder bundleFolder = null;
-					String path = base + "/" + bundle;
-					bundleFolder = parent.getFolder(new Path(path));
-					createFolders(bundleFolder);
-	
-					// download and extract bundle from Repo
-					HttpGet httpGet = new HttpGet(url
-							+ "demo/cat-export/object/download?bundle=" + bundle + "&resize="+resize);
-					res = client.execute(httpGet);
-					try {
-						HttpEntity entity = res.getEntity();
-						InputStream ist = entity.getContent();
-						
-						IFolder mediaFolder = bundleFolder.getFolder("media");
-						if (mediaFolder.exists()) {
-							IResource[] members = mediaFolder.members();
-							for (IResource member : members) {
-								if (member instanceof IFile) {
-									((IFile) member).delete(true, false, null);
-								}
+	private static void updateCatFile(final IFile file) {
+		getCredentials("default", "Cat Export", new CredentialJobInterface() {
+			
+			@Override
+			public void onGetCredentials(CloseableHttpClient client) {
+				try {
+					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+					DocumentBuilder builder = dbf.newDocumentBuilder();
+					InputSource is = new InputSource(new StringReader(
+							getFileContent(file)));
+					Document doc = builder.parse(is);
+		
+					IContainer parent = file.getParent();
+					IFolder compsFolder = parent.getFolder(new Path("cats"));
+					if (!compsFolder.exists())
+						compsFolder.create(true, true, null);
+		
+					NodeList nl = doc.getElementsByTagName("script");
+					for (int i = 0; i < nl.getLength(); i++) {
+						Node n = nl.item(i);
+						String bundle = extractAttribute(n, "bundle-id");
+						String type = extractAttribute(n, "type");
+						String base = extractAttribute(n, "base");
+						String resizeStr = extractAttribute(n, "resize");
+						int resize = 100;
+						if (resizeStr != null && !resizeStr.isEmpty()) {
+							try {
+								resize = Integer.parseInt(resizeStr);
+							} catch (Exception ex) {
+								
 							}
 						}
 							
-						IFile zipFile = writeFile(bundleFolder, "bundle.zip", ist);
-						EntityUtils.consume(entity);
-	
-						unZip(zipFile, bundleFolder);
+						if (bundle == null) continue;
 						
-						zipFile.delete(true, null);
-					} finally {
-						res.close();
+						if (base == null || base.isEmpty()) base = "cats";
+						
+						if (type.equals("cat/comp")) {
+							// create folder for corresponding bundle
+							IFolder bundleFolder = null;
+							String path = base + "/" + bundle;
+							bundleFolder = parent.getFolder(new Path(path));
+							createFolders(bundleFolder);
+			
+							// download and extract bundle from Repo
+							HttpGet httpGet = new HttpGet(url
+									+ "demo/cat-export/object/download?bundle=" + bundle + "&resize="+resize+"&fp="+JooSDK.getUID());
+							CloseableHttpResponse res = client.execute(httpGet);
+							try {
+								HttpEntity entity = res.getEntity();
+								InputStream ist = entity.getContent();
+								
+								IFolder mediaFolder = bundleFolder.getFolder("media");
+								if (mediaFolder.exists()) {
+									IResource[] members = mediaFolder.members();
+									for (IResource member : members) {
+										if (member instanceof IFile) {
+											((IFile) member).delete(true, false, null);
+										}
+									}
+								}
+									
+								IFile zipFile = writeFile(bundleFolder, "bundle.zip", ist);
+								EntityUtils.consume(entity);
+			
+								unZip(zipFile, bundleFolder);
+								
+								zipFile.delete(true, null);
+							} finally {
+								res.close();
+							}
+						}
 					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		});
 	}
 
 	public static void build(IFile file) {
@@ -472,75 +482,143 @@ public class JooSDK {
 		});
 	}
 
-	private static void updateFile(IFile file) {
-		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = dbf.newDocumentBuilder();
-			InputSource is = new InputSource(new StringReader(
-					getFileContent(file)));
-			Document doc = builder.parse(is);
+	private static void updateFile(final IFile file) {
+		// logging in Cerberus
+		getCredentials("default", "Code Repo", new CredentialJobInterface() {
+			
+			@Override
+			public void onGetCredentials(CloseableHttpClient client) {
+				try {
+					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+					DocumentBuilder builder = dbf.newDocumentBuilder();
+					InputSource is = new InputSource(new StringReader(
+							getFileContent(file)));
+					Document doc = builder.parse(is);
 
-			IContainer parent = file.getParent();
-			IFolder compsFolder = parent.getFolder(new Path("components"));
-			if (!compsFolder.exists())
-				compsFolder.create(true, true, null);
-
-			// logging in Cerberus
-			CloseableHttpClient client = HttpClients.createDefault();
-			HttpGet get = new HttpGet(
-					url
-							+ "demo/cerberus/service/index/login?email=coderepo@joolist.com&password=coderepo@2013");
-			CloseableHttpResponse res = client.execute(get);
-			res.close();
-
-			NodeList nl = doc.getElementsByTagName("script");
-			for (int i = 0; i < nl.getLength(); i++) {
-				Node n = nl.item(i);
-				String type = extractAttribute(n, "type");
-				String bundle = extractAttribute(n, "bundle-id");
-				String locked = extractAttribute(n, "lock");
-				String target = extractAttribute(n, "target");
-				String base = extractAttribute(n, "base");
-				
-				if (locked != null && locked.equals("true")) continue;
-				
-				if (type != null && type.equals("joo/comp") && bundle != null) {
-					// create folder for corresponding bundle
-					IFolder bundleFolder = null;
-					String path = "";
-					if (target != null && !target.isEmpty()) {
-						path = target;
-					} else {
-						if (base == null || base.isEmpty()) {
-							base = "components";
-						}
-						path = base + "/" + bundle;
-					}
-					bundleFolder = parent.getFolder(new Path(path));
-					createFolders(bundleFolder);
-	
-					// download and extract bundle from Repo
-					HttpGet httpGet = new HttpGet(url
-							+ "demo/files/file/download-bundle?bundle=" + bundle);
-					res = client.execute(httpGet);
-					try {
-						HttpEntity entity = res.getEntity();
-						InputStream ist = entity.getContent();
-	
-						IFile zipFile = writeFile(bundleFolder, "bundle.zip", ist);
-						EntityUtils.consume(entity);
-	
-						unZip(zipFile, bundleFolder);
+					IContainer parent = file.getParent();
+					IFolder compsFolder = parent.getFolder(new Path("components"));
+					if (!compsFolder.exists())
+						compsFolder.create(true, true, null);
+					
+					NodeList nl = doc.getElementsByTagName("script");
+					for (int i = 0; i < nl.getLength(); i++) {
+						Node n = nl.item(i);
+						String type = extractAttribute(n, "type");
+						String bundle = extractAttribute(n, "bundle-id");
+						String locked = extractAttribute(n, "lock");
+						String target = extractAttribute(n, "target");
+						String base = extractAttribute(n, "base");
 						
-						zipFile.delete(true, null);
-					} finally {
-						res.close();
+						if (locked != null && locked.equals("true")) continue;
+						
+						if (type != null && type.equals("joo/comp") && bundle != null) {
+							// create folder for corresponding bundle
+							IFolder bundleFolder = null;
+							String path = "";
+							if (target != null && !target.isEmpty()) {
+								path = target;
+							} else {
+								if (base == null || base.isEmpty()) {
+									base = "components";
+								}
+								path = base + "/" + bundle;
+							}
+							bundleFolder = parent.getFolder(new Path(path));
+							createFolders(bundleFolder);
+			
+							// download and extract bundle from Repo
+							String downloadUrl = url
+									+ "demo/files/file/download-bundle?bundle=" + bundle+"&fp="+JooSDK.getUID();
+							System.out.println(downloadUrl);
+							HttpGet httpGet = new HttpGet(downloadUrl);
+							CloseableHttpResponse res = client.execute(httpGet);
+							try {
+								HttpEntity entity = res.getEntity();
+								InputStream ist = entity.getContent();
+			
+								IFile zipFile = writeFile(bundleFolder, "bundle.zip", ist);
+								EntityUtils.consume(entity);
+			
+								unZip(zipFile, bundleFolder);
+								
+								 zipFile.delete(true, null);
+							} finally {
+								res.close();
+							}
+						}
 					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 			}
+		});
+	}
+	
+	protected static void handleLoginError(CloseableHttpClient client, String str) throws ClientProtocolException, IOException {
+		if (str.equals("Access Blocked")) {
+			String requestUrl = url + "demo/cerberus/service/index/request-access?platform=Eclipse&browser=JOOSDK+Plugin&ua=eclipsejoosdk";
+			System.out.println(requestUrl);
+			HttpGet _get = new HttpGet(requestUrl);
+			CloseableHttpResponse _res = client.execute(_get);
+			
+			HttpEntity requestEntity = _res.getEntity();
+			String requestResponse = EntityUtils.toString(requestEntity);
+			System.out.println("Get UID: "+requestResponse);
+			JooSDK.storeUID(requestResponse);
+			EntityUtils.consume(requestEntity);
+			
+			JooSDK.showMessageBox("Access Blocked", "The access to this account from Eclipse plugin is blocked. However a request has been automatically generated, please ask the administrator to enable it.");
+		} else {
+			JooSDK.showMessageBox("Login Error", str);
+			JooSDK.clearUserCredentials();
+		}
+	}
+
+	protected static String getUID() {
+		ISecurePreferences root = SecurePreferencesFactory.getDefault();
+		ISecurePreferences node = root.node("org.jooframework.credentials.default");
+		try {
+			String uid = node.get("uid", null);
+			if (uid.matches("^[a-zA-Z0-9\\.]*$"))
+				return uid;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		return "";
+	}
+
+	protected static void storeUID(String requestResponse) {
+		ISecurePreferences root = SecurePreferencesFactory.getDefault();
+		ISecurePreferences node = root.node("org.jooframework.credentials.default");
+		try {
+			node.put("uid", requestResponse, true);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public static void clearUserCredentials() {
+		ISecurePreferences root = SecurePreferencesFactory.getDefault();
+		ISecurePreferences node = root.node("org.jooframework.credentials.default");
+		try {
+			node.remove("username");
+			node.remove("password");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public static void showMessageBox(final String text, final String str) {
+		Display.getDefault().asyncExec(new Runnable() {
+		    @Override
+		    public void run() {
+		    	Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		    	MessageBox msgBox = new MessageBox(shell);
+		    	msgBox.setMessage(str);
+		    	msgBox.setText(text);
+		    	msgBox.open();
+		    }
+		});
 	}
 
 	private static void buildFile(IFile file) {
@@ -794,7 +872,110 @@ public class JooSDK {
 			ex.printStackTrace();
 		}
 	}
+	
+	private static CloseableHttpClient login(UserCredentials cred) throws ClientProtocolException, IOException {
+		if (cred == null) return null;
+		
+		CloseableHttpClient client = HttpClients.createDefault();
+		String loginUrl = url
+				+ "demo/cerberus/service/index/login?email="+cred.getUsername()+"&password="+cred.getPassword()+"&fp="+JooSDK.getUID();
+		System.out.println(loginUrl);
+		HttpGet get = new HttpGet(loginUrl);
+		CloseableHttpResponse res = client.execute(get);
+		
+		HttpEntity _entity = res.getEntity();
+		String str = EntityUtils.toString(_entity);
+		EntityUtils.consume(_entity);
+		res.close();
 
+		if (str == null || !str.equals("SUCCESS:Login successfully")) {
+			if (str != null) {
+				JooSDK.handleLoginError(client, str);
+			}
+			return null;
+		}
+		return client;
+	}
+	
+	private static void getCredentials(final String ns, final String comp, final CredentialJobInterface job) {
+		ISecurePreferences root = SecurePreferencesFactory.getDefault();
+		ISecurePreferences node = root.node("org.jooframework.credentials."+ns);
+		try {
+			String username = node.get("username", null);
+			String password = node.get("password", null);
+			if (username != null && password != null) {
+				CloseableHttpClient client = login(new UserCredentials(username, password));
+				job.onGetCredentials(client);
+				return;
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		Display.getDefault().asyncExec(new Runnable() {
+		    @Override
+		    public void run() {
+		    	ISecurePreferences root = SecurePreferencesFactory.getDefault();
+				ISecurePreferences node = root.node("org.jooframework.credentials."+ns);
+				
+		    	Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+				final UserCredentials cred = showCredentialDialog(shell, comp);
+				if (cred != null) {
+					try {
+						node.put("username", cred.getUsername(), true);
+						node.put("password", cred.getPassword(), true);
+						Job ajob = new Job("Loggin in") {
+							@Override
+							protected IStatus run(IProgressMonitor monitor) {
+								try {
+									CloseableHttpClient client = login(cred);
+									job.onGetCredentials(client);
+								} catch (Exception ex) {
+									
+								}
+								return Status.OK_STATUS;
+							}
+						};
+						ajob.schedule();
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				}
+		    }
+		});
+	}
+	
+	private static UserCredentials showCredentialDialog(Shell shell, String comp) {
+		CredentialsDialog dialog = new CredentialsDialog(shell, comp);
+		dialog.create();
+		if (dialog.open() == Window.OK) {
+			return new UserCredentials(dialog.getUsername(), dialog.getPassword());
+		}
+		return null;
+	}
+
+}
+
+class UserCredentials {
+	private String username;
+	private String password;
+	
+	public UserCredentials(String username, String password) {
+		this.username = username;
+		this.password = password;
+	}
+	
+	public String getUsername() {
+		return username;
+	}
+	public String getPassword() {
+		return password;
+	}
+}
+
+interface CredentialJobInterface {
+	
+	public void onGetCredentials(CloseableHttpClient client);
 }
 
 interface UpdateJobInterface {
